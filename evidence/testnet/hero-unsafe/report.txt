@@ -1,0 +1,54 @@
+SAZUME — ARC TESTNET QUALIFICATION
+Network: Arc Testnet (5042002)
+Scenario: timeout-after-settlement
+Intent: SAZUME-ARC-TIMEOUT-AFTER-UNSAFE-001 (5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6)
+Contract: 0x8cd2da9e45d18c47a803f065a3625ae68bf37b17
+Amount: 0.01 USDC (10000 USDC6)
+Settlement attempts: 2
+Successful receipts: 2
+Reverted receipts: 0
+Matching events: 2
+Recipient delta: 20000 USDC6
+Observed settlements: 2
+Fulfillments: 1
+Receipt/event/balance agree: true
+Verdict: FAIL
+
+SAZUME
+Economic Reliability Test — UNSAFE
+────────────────────────────────
+
+Intent        SAZUME-ARC-TIMEOUT-AFTER-UNSAFE-001
+Expected      0.010000 USDC
+
+✕ timeout-after-settlement
+
+ECONOMIC INVARIANT VIOLATION
+
+Settlement uniqueness
+  expected    <= 1
+  observed    2
+
+Recipient amount
+  expected    0.010000 USDC
+  observed    0.020000 USDC
+
+TRACE
+  01 settlement-attempt
+  02 settlement-observed
+  03 timeout
+  04 retry
+  05 settlement-attempt
+  06 settlement-observed
+  07 fulfillment-attempt
+  08 fulfillment-observed
+
+────────────────────────────────
+0 passed
+1 failed
+
+ECONOMIC INTENT NOT PRESERVED
+
+TRANSACTIONS
+0xe4b252a78b18a41f1d723c67ae12cafda33bce7cdba0664bff4a155175ae8667 success block=65539149 gasUsed=89933 effectiveGasPrice=25000000000 gasCostNative18=2248325000000000 gasCostUsdc6=2248
+0x470df93520b04a864d6d91b590f76a877506aa5d6fb2122a1ed1ddcc7a3fe999 success block=65539153 gasUsed=64933 effectiveGasPrice=25000000000 gasCostNative18=1623325000000000 gasCostUsdc6=1623

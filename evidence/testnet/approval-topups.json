@@ -1,0 +1,18 @@
+[
+  {
+    "fixture": "unsafe",
+    "scenario": "timeout-after-settlement",
+    "spender": "0x8cd2da9e45d18c47a803f065a3625ae68bf37b17",
+    "payerAddress": "0x6CeD8D6Bad8Dfd2e60BCEA116fE74548f959f1F2",
+    "addedApprovalUsdc6": "20000",
+    "receipt": {
+      "hash": "0x543a1ae12a1a366db8306e7f6c0c54cbeb11232acf01f5dca8e18bb121877226",
+      "status": "success",
+      "blockNumber": "65540023",
+      "gasUsed": "55426",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "1385650000000000",
+      "gasCostUsdc6": "1385"
+    }
+  }
+]

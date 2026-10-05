@@ -1,0 +1,30 @@
+SAZUME — ARC TESTNET QUALIFICATION
+Network: Arc Testnet (5042002)
+Scenario: duplicate-callback
+Intent: SAZUME-ARC-DUPLICATE-CALLBACK-FIXED-001 (b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c)
+Contract: 0x0908e0409d593409d251306302fdca0c45198b9c
+Amount: 0.01 USDC (10000 USDC6)
+Settlement attempts: 1
+Successful receipts: 1
+Reverted receipts: 0
+Matching events: 1
+Recipient delta: 10000 USDC6
+Observed settlements: 1
+Fulfillments: 1
+Receipt/event/balance agree: true
+Verdict: PASS
+
+SAZUME
+Economic Reliability Test — FIXED
+────────────────────────────────
+
+✓ duplicate-callback
+
+────────────────────────────────
+1 passed
+0 failed
+
+ECONOMIC INTENT PRESERVED
+
+TRANSACTIONS
+0xc8a843c05a2290b429e7f4ef5a1ba8ccad8b2b29be2253f582e3aa58351fb3e1 success block=65539715 gasUsed=82604 effectiveGasPrice=25000000000 gasCostNative18=2065100000000000 gasCostUsdc6=2065

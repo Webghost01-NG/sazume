@@ -29,12 +29,13 @@ describe("Arc unit normalization", () => {
 });
 
 describe("Arc network configuration", () => {
-  it("uses official Arc testnet and mainnet chain IDs and RPC defaults", () => {
+  it("uses official Arc testnet configuration and refuses mainnet during Phase 6.5", () => {
     const addresses = { ARC_USDC_ADDRESS: "0x3600000000000000000000000000000000000000", SAZUME_SETTLEMENT_ADDRESS: "0x0000000000000000000000000000000000000001" };
     const testnet = arcConfigFromEnv(addresses);
     expect(testnet).toMatchObject({ chainId: 5_042_002, rpcUrl: "https://rpc.testnet.arc.io" });
     expect(arcChain(testnet)).toMatchObject({ id: 5_042_002, nativeCurrency: { symbol: "USDC", decimals: 18 } });
-    expect(arcConfigFromEnv({ ...addresses, ARC_CHAIN_ID: "5042" })).toMatchObject({ chainId: 5042, rpcUrl: "https://rpc.mainnet.arc.io" });
+    expect(() => arcConfigFromEnv({ ...addresses, ARC_CHAIN_ID: "5042" })).toThrow("MAINNET EXECUTION DISABLED DURING PHASE 6.5");
+    expect(() => arcChain({ ...testnet, chainId: 5042 })).toThrow("MAINNET EXECUTION DISABLED DURING PHASE 6.5");
     expect(() => arcConfigFromEnv({ ...addresses, ARC_CHAIN_ID: "1" })).toThrow();
   });
 });
@@ -134,5 +135,27 @@ describe("ArcEconomicAdapter boundary", () => {
     await adapter.reset();
     expect((await adapter.observe(intent)).settlement.count).toBe(0);
     expect((await adapter.observeWithExecution(intent)).transactions).toEqual([]);
+  });
+
+  it("blocks mainnet and refuses Arc Testnet RPC chain mismatches before sending", async () => {
+    let sendCount = 0;
+    const mainnetAdapter = new ArcEconomicAdapter({
+      publicClient: { chain: { id: 5_042 } } as never,
+      walletClient: { chain: { id: 5_042 }, account: payer, sendTransaction: async () => { sendCount += 1; return `0x${"a".repeat(64)}`; } } as never,
+      contractAddress: contract, payerFor: () => payer, recipientFor: () => recipient,
+      idempotentFulfillment: true, fromBlock: 0n,
+      resetForScenario: async () => ({ contractAddress: contract, fromBlock: 0n }),
+    });
+    await expect(mainnetAdapter.settle(intent)).rejects.toThrow("MAINNET EXECUTION DISABLED DURING PHASE 6.5");
+
+    const mismatchedTestnetAdapter = new ArcEconomicAdapter({
+      publicClient: { chain: { id: 5_042_002 }, getChainId: async () => 5042 } as never,
+      walletClient: { chain: { id: 5_042_002 }, account: payer, sendTransaction: async () => { sendCount += 1; return `0x${"b".repeat(64)}`; } } as never,
+      contractAddress: contract, payerFor: () => payer, recipientFor: () => recipient,
+      idempotentFulfillment: true, fromBlock: 0n,
+      resetForScenario: async () => ({ contractAddress: contract, fromBlock: 0n }),
+    });
+    await expect(mismatchedTestnetAdapter.settle(intent)).rejects.toThrow("Arc Testnet chain guard rejected RPC chain ID 5042; expected 5042002");
+    expect(sendCount).toBe(0);
   });
 });

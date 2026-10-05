@@ -9,8 +9,10 @@ import { timeoutBeforeSettlement } from "../../../scenarios/timeout-before-settl
 import { ArcEconomicAdapter } from "./adapter.js";
 import { createPublicClient, createWalletClient, defineChain, http, parseAbi, type Address, type Hex } from "viem";
 
+const arcFoundryLocal = process.env.SAZUME_ARC_FOUNDRY_LOCAL === "1";
 const rpcUrl = "http://127.0.0.1:8547";
-const localChain = defineChain({ id: 31337, name: "Ordinary Anvil Local EVM (not Arc)", nativeCurrency: { name: "Ether simulation", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: [rpcUrl] } } });
+const chainId = arcFoundryLocal ? 5_042_002 : 31_337;
+const localChain = defineChain({ id: chainId, name: arcFoundryLocal ? "Arc Foundry arc-anvil local simulation (not Arc Testnet)" : "Ordinary Anvil Local EVM (not Arc)", nativeCurrency: { name: "Local simulation currency", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: [rpcUrl] } } });
 const deployer = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" as Address;
 const payer = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8" as Address;
 const recipient = deployer;
@@ -33,7 +35,10 @@ async function deployArtifact(file: string, args: readonly unknown[] = []): Prom
 async function sendAndWait(hash: Hex): Promise<void> { await publicClient.waitForTransactionReceipt({ hash }); }
 
 async function startAnvil(): Promise<void> {
-  child = spawn("anvil", ["--port", "8547", "--chain-id", "31337", "--accounts", "5", "--silent"], { stdio: "ignore" });
+  const executable = arcFoundryLocal ? (process.env.ARC_ANVIL_BIN ?? "arc-anvil") : "anvil";
+  const args = ["--port", "8547", "--chain-id", String(chainId), "--accounts", "5", "--silent"];
+  if (arcFoundryLocal) args.push("--block-base-fee-per-gas", "20000000000");
+  child = spawn(executable, args, { stdio: "ignore" });
   for (let attempt = 0; attempt < 60; attempt += 1) {
     try { await publicClient.getChainId(); return; } catch { await delay(100); }
   }
@@ -42,6 +47,8 @@ async function startAnvil(): Promise<void> {
 
 async function main(): Promise<void> {
   await startAnvil();
+  const actualChainId = await publicClient.getChainId();
+  if (actualChainId !== chainId) throw new Error(`Local execution chain ID mismatch: expected ${chainId}, got ${actualChainId}`);
   const token = await deployArtifact("MockUSDC.sol/MockUSDC.json");
   await sendAndWait(await deployWallet.writeContract({ address: token, abi: usdcAbi, functionName: "mint", args: [payer, 100_000_000n] }));
   const intent = defineIntent({

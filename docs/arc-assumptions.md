@@ -11,6 +11,10 @@
 
 Arc documents **Arc Foundry**, a Circle fork with `arc-forge`, `arc-cast`, and `arc-anvil`, because ordinary Foundry does not encode all Arc protocol differences. The official instructions install release binaries. Standard `forge`/`anvil` used by `npm run test:contracts` and `npm run demo:arc-local` are used only for Solidity/local EVM simulation. That demo prints its chain ID and does not claim Arc runtime equivalence.
 
+On 2026-10-05, the latest official Circle release was `v0.8.0-2`. The x86_64 Linux archive was downloaded from the official `circlefin/arc-foundry` release, using byte ranges after the ordinary transfer reset. Its SHA-256 matched Circle's published checksum: `088bdb96a84418b757f9825d491e702792f1d1d1e29a9145af305a6600a79556`. The isolated binaries report version `1.7.1-dev`, commit `d497beea7096ff2a8e583c8b307941f24a61b06b`; standard system Foundry binaries were not replaced. `arc-forge test --root contracts -vv` passed 4/4 contract tests. Arc Anvil was also run locally with chain ID `5042002` and base fee `20_000_000_000` wei-shaped units; this is an Arc Foundry local simulator, not Arc Testnet. The full shared scenario matrix is recorded in README.
+
+Circle's official docs direct developers to the Circle Faucet for testnet USDC. Funding was supplied to the disposable testnet wallet through the faucet. The Arc Testnet RPC returned chain ID `5042002` before each broadcast. Two fixtures were deployed to testnet, then hero and full matrix scenarios were run with unique intents. Detailed public evidence, including receipts, event counts, recipient balance deltas, and gas, is under `evidence/testnet/`. No private key or credential is stored in evidence.
+
 ## USDC and units
 
 - The application-facing ERC-20 interface is at `0x3600000000000000000000000000000000000000` on mainnet and testnet, with **6 decimals**.
@@ -22,7 +26,9 @@ Arc documents **Arc Foundry**, a Circle fork with `arc-forge`, `arc-cast`, and `
 
 ## Finality and receipts
 
-Arc documents a two-state transaction lifecycle: unconfirmed or final, with committed blocks irreversibly finalized in under one second. The adapter waits for a transaction receipt and does not add an Ethereum-style confirmation count. A successful receipt alone is not treated as proof of settlement: outcome count and amount come from successful `IntentSettled` logs emitted by the configured fixture. Reverted receipts contribute transaction/gas diagnostics but no settlement event. Arc documents a blocklist-revert path that can consume gas without returning a normal receipt; this integration does not yet classify that RPC behavior and it remains a live-observation limitation.
+Arc documents a two-state transaction lifecycle: unconfirmed or final, with committed blocks irreversibly finalized in under one second. Testnet transactions were submitted, included, and returned successful or reverted receipts; the adapter treated receipt availability on inclusion as final and added no Ethereum-style confirmation count. Each qualification scenario additionally checked matching `IntentSettled` events and the recipient's ERC-20 USDC6 balance delta. All accepted testnet scenarios had receipt/event/balance agreement. Reverted receipts contributed transaction/gas diagnostics but no settlement event. Arc documents a blocklist-revert path that can consume gas without returning a normal receipt; this integration does not yet classify that RPC behavior and it remains a live-observation limitation.
+
+The fixture observer's in-application outcome is derived from successful fixture events and receipts; testnet qualification wraps it with an explicit before/after recipient USDC6 balance corroboration. Gas remains diagnostic. Receipt `gasUsed × effectiveGasPrice` was observed at a 25 Gwei effective price in these runs. `native18ToUsdc6` divides the resulting native18 cost by `10^12`, truncating sub-USDC6 precision while retaining the raw native18 amount in evidence.
 
 ## Sources
 
@@ -35,3 +41,4 @@ Arc documents a two-state transaction lifecycle: unconfirmed or final, with comm
 - [Deterministic finality](https://docs.arc.io/arc/concepts/deterministic-finality.md)
 - [Install Arc Foundry](https://docs.arc.io/arc/tutorials/install-arc-foundry.md)
 - [Circle's official Arc Foundry releases](https://github.com/circlefin/arc-foundry/releases)
+- [Circle Faucet](https://faucet.circle.com/)

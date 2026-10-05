@@ -1,0 +1,31 @@
+SAZUME — ARC TESTNET QUALIFICATION
+Network: Arc Testnet (5042002)
+Scenario: timeout-after-settlement
+Intent: SAZUME-ARC-FULL-TIMEOUT-AFTER-FIXED-001 (106e0c5e0b17a5d932a85bd5a606e33baf2dfd44827f5298d53a72f68d57c8d4)
+Contract: 0x0908e0409d593409d251306302fdca0c45198b9c
+Amount: 0.01 USDC (10000 USDC6)
+Settlement attempts: 2
+Successful receipts: 1
+Reverted receipts: 1
+Matching events: 1
+Recipient delta: 10000 USDC6
+Observed settlements: 1
+Fulfillments: 1
+Receipt/event/balance agree: true
+Verdict: PASS
+
+SAZUME
+Economic Reliability Test — FIXED
+────────────────────────────────
+
+✓ timeout-after-settlement
+
+────────────────────────────────
+1 passed
+0 failed
+
+ECONOMIC INTENT PRESERVED
+
+TRANSACTIONS
+0x8d559529272e691d30f1c7c8258eb7d9814f7c6a09f50a03df71914cddc828b2 success block=65539702 gasUsed=87404 effectiveGasPrice=25000000000 gasCostNative18=2185100000000000 gasCostUsdc6=2185
+0x473546dc0f2a003abe129eef6184093b9cc69e87e74493c68938f9912862a286 reverted block=65539707 gasUsed=25293 effectiveGasPrice=25000000000 gasCostNative18=632325000000000 gasCostUsdc6=632

@@ -29,6 +29,7 @@ export class ArcEconomicAdapter implements EconomicAdapter {
   }
 
   async settle(intent: EconomicIntent): Promise<SettlementResult> {
+    await this.assertArcExecutionChain();
     const payer = this.options.payerFor(intent);
     const recipient = this.options.recipientFor(intent);
     const data = encodeFunctionData({ abi: settleAbi, functionName: "settle", args: [`0x${intent.intentId}`, recipient, intent.payment.amount] });
@@ -42,7 +43,8 @@ export class ArcEconomicAdapter implements EconomicAdapter {
     });
     const receipt = await this.options.publicClient.waitForTransactionReceipt({ hash });
     const gasUsed = receipt.gasUsed;
-    const effectiveGasPrice = receipt.effectiveGasPrice ?? 0n;
+    if (receipt.effectiveGasPrice === undefined) throw new Error(`OBSERVER INCONSISTENCY: receipt ${hash} omitted effectiveGasPrice`);
+    const effectiveGasPrice = receipt.effectiveGasPrice;
     this.txObservations.push({ hash, status: receipt.status === "success" ? "success" : "reverted", gasUsed, effectiveGasPrice, gasCostNative18: gasUsed * effectiveGasPrice });
     const logs = await this.options.publicClient.getLogs({ address: this.activeContractAddress, fromBlock: receipt.blockNumber, toBlock: receipt.blockNumber });
     const accepted = receipt.status === "success" && logs.some((log) => {
@@ -53,6 +55,30 @@ export class ArcEconomicAdapter implements EconomicAdapter {
       } catch { return false; }
     });
     return { accepted, amount: accepted ? intent.payment.amount : 0n };
+  }
+
+  private async assertArcExecutionChain(): Promise<void> {
+    const configuredPublicId = this.options.publicClient.chain?.id;
+    const configuredWalletId = this.options.walletClient.chain?.id;
+    if (configuredPublicId === 5_042 || configuredWalletId === 5_042) {
+      throw new Error("MAINNET EXECUTION DISABLED DURING PHASE 6.5");
+    }
+    if (configuredPublicId === 5_042_002 || configuredWalletId === 5_042_002) {
+      if (configuredPublicId !== 5_042_002 || configuredWalletId !== 5_042_002) {
+        throw new Error("Arc Testnet public and wallet clients must both use chain ID 5042002");
+      }
+      if (typeof this.options.publicClient.getChainId !== "function") {
+        throw new Error("Cannot verify the Arc Testnet RPC chain ID before transaction submission");
+      }
+      const actualChainId = await this.options.publicClient.getChainId();
+      if (actualChainId !== 5_042_002) {
+        throw new Error(`Arc Testnet chain guard rejected RPC chain ID ${actualChainId}; expected 5042002`);
+      }
+      return;
+    }
+    if (configuredPublicId !== undefined && configuredWalletId !== undefined && configuredPublicId !== configuredWalletId) {
+      throw new Error(`Public and wallet client chain IDs differ: ${configuredPublicId} vs ${configuredWalletId}`);
+    }
   }
 
   async fulfill(intent: EconomicIntent): Promise<FulfillmentResult> {

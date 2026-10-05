@@ -2,9 +2,11 @@ import { createPublicClient, createWalletClient, defineChain, http, type Account
 import type { ArcConfig } from "./config.js";
 
 export function arcChain(config: ArcConfig): Chain {
+  if (config.chainId === 5_042) throw new Error("MAINNET EXECUTION DISABLED DURING PHASE 6.5");
+  if (config.chainId !== 5_042_002) throw new Error("Arc runtime qualification is restricted to testnet chain ID 5042002");
   return defineChain({
     id: config.chainId,
-    name: config.chainId === 5_042 ? "Arc" : "Arc Testnet",
+    name: "Arc Testnet",
     nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
     rpcUrls: { default: { http: [config.rpcUrl] } },
   });

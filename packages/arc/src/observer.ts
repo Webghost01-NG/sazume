@@ -54,7 +54,8 @@ export class ArcObserver {
       if (knownHashes.has(event.transactionHash)) return [];
       knownHashes.add(event.transactionHash);
       const gasUsed = receipt.gasUsed;
-      const effectiveGasPrice = receipt.effectiveGasPrice ?? 0n;
+      if (receipt.effectiveGasPrice === undefined) throw new Error(`OBSERVER INCONSISTENCY: receipt ${event.transactionHash} omitted effectiveGasPrice`);
+      const effectiveGasPrice = receipt.effectiveGasPrice;
       return [{ hash: event.transactionHash, status: "success", gasUsed, effectiveGasPrice, gasCostNative18: gasUsed * effectiveGasPrice }];
     });
     return {

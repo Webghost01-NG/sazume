@@ -1,0 +1,30 @@
+SAZUME — ARC TESTNET QUALIFICATION
+Network: Arc Testnet (5042002)
+Scenario: normal
+Intent: SAZUME-ARC-NORMAL-FIXED-001 (044275b41abc9eca7977d2b5df4899c9f53aec302b00c14ba35486f898e3b987)
+Contract: 0x0908e0409d593409d251306302fdca0c45198b9c
+Amount: 0.01 USDC (10000 USDC6)
+Settlement attempts: 1
+Successful receipts: 1
+Reverted receipts: 0
+Matching events: 1
+Recipient delta: 10000 USDC6
+Observed settlements: 1
+Fulfillments: 1
+Receipt/event/balance agree: true
+Verdict: PASS
+
+SAZUME
+Economic Reliability Test — FIXED
+────────────────────────────────
+
+✓ normal
+
+────────────────────────────────
+1 passed
+0 failed
+
+ECONOMIC INTENT PRESERVED
+
+TRANSACTIONS
+0xe2d58463531def070c07274c5d211d04b02d9fb64a0f9aae573a11c8da442bc3 success block=65539508 gasUsed=87392 effectiveGasPrice=25000000000 gasCostNative18=2184800000000000 gasCostUsdc6=2184

@@ -9,7 +9,10 @@
     "typecheck": "tsc --noEmit",
     "test:contracts": "forge test --root contracts",
     "test:contracts:arc": "arc-forge test --root contracts",
-    "demo:arc-local": "forge build --root contracts && tsx packages/arc/src/demo-local.ts"
+    "demo:arc-local": "forge build --root contracts && tsx packages/arc/src/demo-local.ts",
+    "demo:arc-foundry-local": "SAZUME_ARC_FOUNDRY_LOCAL=1 tsx packages/arc/src/demo-local.ts",
+    "qualify:arc-testnet:hero": "tsx packages/arc/src/qualify-testnet.ts hero",
+    "qualify:arc-testnet:full": "tsx packages/arc/src/qualify-testnet.ts full"
   },
   "dependencies": {
     "viem": "^2.57.3"
