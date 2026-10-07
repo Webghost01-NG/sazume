@@ -19,15 +19,25 @@ describe("Sazume evidence replay interface", () => {
     render(<App />);
 
     expect(screen.getAllByText(/ARC TESTNET/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/VERIFIED EVIDENCE REPLAY/)).toBeTruthy();
+    expect(screen.getAllByText(/VERIFIED EVIDENCE REPLAY/).length).toBeGreaterThan(0);
     expect(screen.getByText(/No transaction is broadcast from this browser/)).toBeTruthy();
     expect(screen.queryByText(/Arc Mainnet verified/i)).toBeNull();
+  });
+
+  it("starts in configuration without exposing a verdict, proof, or qualification matrix", () => {
+    render(<App />);
+
+    expect(screen.getByText("CONFIGURE")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i })).toBeTruthy();
+    expect(screen.queryByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/i })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "PROVE THE OUTCOME." })).toBeNull();
+    expect(screen.queryByRole("heading", { name: "THE BEHAVIORAL MATRIX" })).toBeNull();
   });
 
   it("keeps successful receipt status separate from an unsafe economic failure", async () => {
     vi.useFakeTimers();
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: /RUN TEST/i }));
+    fireEvent.click(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i }));
     await finishReplay();
 
     expect(screen.getByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/ })).toBeTruthy();
@@ -38,14 +48,14 @@ describe("Sazume evidence replay interface", () => {
   it("clears the prior verdict when switching implementation and replays fixed evidence", async () => {
     vi.useFakeTimers();
     render(<App />);
-    fireEvent.click(screen.getByRole("button", { name: /RUN TEST/i }));
+    fireEvent.click(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i }));
     await finishReplay();
     expect(screen.getByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/ })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: /FIXED/i }));
+    fireEvent.click(screen.getByRole("button", { name: /IDEMPOTENT/i }));
     expect(screen.queryByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/ })).toBeNull();
-    expect(screen.getByText("AWAITING REPLAY")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /RUN TEST/i }));
+    expect(screen.getByText("CONFIGURE")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i }));
     await finishReplay();
 
     expect(screen.getByRole("heading", { name: /ECONOMIC INTENT.*PRESERVED/ })).toBeTruthy();

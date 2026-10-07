@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react";
 import matrixEvidence from "../../../evidence/testnet/full-matrix.json";
 import {
   abbreviate,
@@ -8,12 +8,13 @@ import {
   type ScenarioKey,
 } from "./lib/evidenceProvider.js";
 import { buildRunPresentation } from "./lib/presentation.js";
+import { initialRunState, runMachineReducer } from "./lib/runMachine.js";
 
 const scenarios: Array<{ id: ScenarioKey; number: string; title: string; description: string }> = [
-  { id: "normal", number: "01", title: "Normal", description: "Settle once, then fulfill." },
-  { id: "timeout-before-settlement", number: "02", title: "Timeout before settlement", description: "Retry after the request times out." },
-  { id: "timeout-after-settlement", number: "03", title: "Timeout after settlement", description: "The payment commits; its acknowledgement is lost." },
-  { id: "duplicate-callback", number: "04", title: "Duplicate callback", description: "The fulfillment handler receives the callback twice." },
+  { id: "normal", number: "01", title: "NORMAL", description: "Settle once, then fulfill." },
+  { id: "timeout-before-settlement", number: "02", title: "TIMEOUT / BEFORE SETTLEMENT", description: "The request expires before payment commits." },
+  { id: "timeout-after-settlement", number: "03", title: "TIMEOUT / AFTER SETTLEMENT", description: "Payment commits; its acknowledgement disappears." },
+  { id: "duplicate-callback", number: "04", title: "DUPLICATE CALLBACK", description: "The fulfillment callback arrives twice." },
 ];
 
 const invariantDescriptions: Record<string, string> = {
@@ -73,8 +74,7 @@ function BrandMark() {
 export default function App() {
   const [fixture, setFixture] = useState<Fixture>("unsafe");
   const [scenario, setScenario] = useState<ScenarioKey>("timeout-after-settlement");
-  const [runState, setRunState] = useState<"idle" | "running" | "complete">("idle");
-  const [visibleSteps, setVisibleSteps] = useState(0);
+  const [runState, dispatch] = useReducer(runMachineReducer, initialRunState);
   const presentation = useMemo(
     () => buildRunPresentation(fixture, scenario, testnetEvidenceProvider.loadRun(fixture, scenario)),
     [fixture, scenario],
@@ -82,22 +82,27 @@ export default function App() {
   const evidence = presentation.evidence;
 
   useEffect(() => {
-    if (runState !== "running") return undefined;
+    if (runState.stage !== "running") return undefined;
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
-    if (visibleSteps >= presentation.trace.length) {
-      const timer = window.setTimeout(() => setRunState("complete"), reducedMotion ? 0 : 480);
-      return () => window.clearTimeout(timer);
-    }
     const timer = window.setTimeout(
-      () => setVisibleSteps((current) => Math.min(current + 1, presentation.trace.length)),
-      reducedMotion ? 30 : 520,
+      () => dispatch({ type: "advance-trace", total: presentation.trace.length }),
+      reducedMotion ? 35 : 510,
     );
     return () => window.clearTimeout(timer);
-  }, [presentation.trace.length, runState, visibleSteps]);
+  }, [presentation.trace.length, runState.stage, runState.visibleTraceSteps]);
+
+  useEffect(() => {
+    if (runState.stage !== "analyzing") return undefined;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+    const timer = window.setTimeout(
+      () => dispatch({ type: "advance-analysis", total: 4 }),
+      reducedMotion ? 35 : 620,
+    );
+    return () => window.clearTimeout(timer);
+  }, [runState.stage, runState.visibleAnalysisSteps]);
 
   function resetReplay() {
-    setVisibleSteps(0);
-    setRunState("idle");
+    dispatch({ type: "reset" });
   }
 
   function selectFixture(next: Fixture) {
@@ -111,14 +116,14 @@ export default function App() {
   }
 
   function runReplay() {
-    setVisibleSteps(0);
-    setRunState("running");
+    dispatch({ type: "start" });
   }
 
   const successReceipts = evidence.transactions.filter((item) => item.status === "success").length;
   const revertedReceipts = evidence.transactions.filter((item) => item.status === "reverted").length;
   const matchingEvents = evidence.matchingEvents.length;
   const verdictFailed = evidence.verdict === "FAIL";
+  const isComplete = runState.stage === "complete";
 
   return (
     <main className="app-shell">
@@ -141,21 +146,20 @@ export default function App() {
         <div className="hero-copy">
           <p className="eyebrow"><span>01</span> ECONOMIC RELIABILITY / PAYMENT WORKFLOWS</p>
           <h1>THE TRANSACTION<br />SUCCEEDED.<br /><span>DID THE MONEY?</span></h1>
-          <p className="hero-subtitle">A successful receipt is not an economic verdict.</p>
+          <p className="hero-subtitle">Economic reliability testing<br />for programmable money.</p>
         </div>
         <div className="hero-instrument" aria-label="Replay metadata">
           <div className="instrument-heading"><span>SAZUME / RUNNER</span><span>v0.1</span></div>
-          <div className="instrument-row"><span>ENGINE</span><strong><i /> READY</strong></div>
-          <div className="instrument-row"><span>NETWORK</span><strong>ARC TESTNET</strong></div>
-          <div className="instrument-row"><span>EVIDENCE</span><strong>RECEIPT + EVENT + BALANCE</strong></div>
-          <div className="instrument-foot"><span>MODE</span><strong>STATIC VERIFIED REPLAY</strong></div>
+        <div className="instrument-row"><span>NETWORK</span><strong>ARC TESTNET</strong></div>
+        <div className="instrument-row"><span>STATUS</span><strong>VERIFIED EVIDENCE</strong></div>
+        <div className="instrument-foot"><span>MODE</span><strong>REPLAY · NO BROADCAST</strong></div>
         </div>
       </section>
 
       <div className="replay-banner">
         <span className="replay-icon" aria-hidden="true">↻</span>
-        <span><strong>REPLAYING VERIFIED ARC TESTNET EXECUTION EVIDENCE.</strong> No transaction is broadcast from this browser.</span>
-        <span className="replay-ref">EVIDENCE SET / 10 ACCEPTED RUNS</span>
+        <span><strong>VERIFIED EVIDENCE REPLAY.</strong> Replaying a previously verified Arc Testnet execution. No transaction is broadcast from this browser.</span>
+        <span className="replay-ref">ARC TESTNET · 5042002</span>
       </div>
 
       <section className="workbench" aria-label="Sazume reliability experiment">
@@ -164,36 +168,31 @@ export default function App() {
 
           <section className="intent-block" aria-labelledby="intent-title">
             <div className="block-title-row"><h2 id="intent-title">ECONOMIC INTENT</h2><span className="live-tag">USDC6</span></div>
-            <p className="intent-statement">Pay the merchant<br />once.</p>
-            <div className="intent-id-row">
-              <span>INTENT ID</span>
-              <CopyValue value={evidence.intent.intentId} label="economic intent ID" />
-            </div>
+            <p className="intent-statement">PAY RECIPIENT<br />EXACTLY ONCE</p>
             <div className="intent-value-row">
               <div><span>OBLIGATION</span><strong>{formatUsdc6(evidence.qualificationAmountUsdc6)} <small>USDC</small></strong></div>
               <div><span>SETTLEMENTS</span><strong>≤ 1</strong></div>
             </div>
-            <p className="intent-human-id">{evidence.intent.humanId}</p>
+            {runState.stage === "configure" ? <p className="intent-human-id">VERIFIED QUALIFICATION · 0.010000 USDC</p> : <div className="intent-id-row"><span>SAME ECONOMIC INTENT</span><CopyValue value={evidence.intent.intentId} label="economic intent ID" /></div>}
           </section>
 
           <section className="fixture-block" aria-labelledby="fixture-title">
-            <div className="section-heading-line"><h2 id="fixture-title">APPLICATION IMPLEMENTATION</h2><span>SELECT FIXTURE</span></div>
+            <div className="section-heading-line"><h2 id="fixture-title">IMPLEMENTATION UNDER TEST</h2><span>SELECT ONE</span></div>
             <div className="fixture-switch" role="group" aria-label="Application implementation">
-              <button type="button" aria-pressed={fixture === "unsafe"} onClick={() => selectFixture("unsafe")} className={fixture === "unsafe" ? "selected unsafe-selected" : ""}>
-                <span className="switch-indicator" /> UNSAFE
+              <button type="button" disabled={runState.stage === "running" || runState.stage === "analyzing"} aria-pressed={fixture === "unsafe"} onClick={() => selectFixture("unsafe")} className={fixture === "unsafe" ? "selected unsafe-selected" : ""}>
+                <span className="switch-indicator" /> UNSAFE <small>No settlement idempotency.</small>
               </button>
-              <button type="button" aria-pressed={fixture === "fixed"} onClick={() => selectFixture("fixed")} className={fixture === "fixed" ? "selected fixed-selected" : ""}>
-                <span className="switch-indicator" /> FIXED
+              <button type="button" disabled={runState.stage === "running" || runState.stage === "analyzing"} aria-pressed={fixture === "fixed"} onClick={() => selectFixture("fixed")} className={fixture === "fixed" ? "selected fixed-selected" : ""}>
+                <span className="switch-indicator" /> IDEMPOTENT <small>Duplicate intent prevented.</small>
               </button>
             </div>
-            <p className="fixture-description">{fixture === "unsafe" ? "No idempotency protection. A retry can settle the same obligation twice." : "Idempotent settlement. A duplicate intent is rejected before another transfer."}</p>
           </section>
 
           <section className="scenario-block" aria-labelledby="scenario-title">
-            <div className="section-heading-line"><h2 id="scenario-title">FAILURE SCENARIO</h2><span>4 VERIFIED</span></div>
+            <div className="section-heading-line"><h2 id="scenario-title">FAULT INJECTION</h2><span>4 SCENARIOS</span></div>
             <div className="scenario-list" role="group" aria-label="Failure scenario">
               {scenarios.map((item) => (
-                <button key={item.id} type="button" aria-pressed={scenario === item.id} onClick={() => selectScenario(item.id)} className={`scenario-option ${scenario === item.id ? "scenario-selected" : ""}`}>
+                <button key={item.id} type="button" disabled={runState.stage === "running" || runState.stage === "analyzing"} aria-pressed={scenario === item.id} onClick={() => selectScenario(item.id)} className={`scenario-option ${scenario === item.id ? "scenario-selected" : ""}`}>
                   <span className="scenario-number">{item.number}</span>
                   <span className="scenario-copy"><strong>{item.title}</strong><small>{item.description}</small></span>
                   <span className="scenario-chevron" aria-hidden="true">↗</span>
@@ -203,12 +202,12 @@ export default function App() {
           </section>
 
           <div className="run-actions">
-            <button type="button" className="run-button" onClick={runReplay} disabled={runState === "running"}>
-              <span className={runState === "running" ? "run-spinner" : "run-symbol"} aria-hidden="true">{runState === "running" ? "" : "▶"}</span>
-              {runState === "running" ? "REPLAYING EVIDENCE" : runState === "complete" ? "REPLAY TEST" : "RUN TEST"}
+            <button type="button" className="run-button" onClick={runReplay} disabled={runState.stage === "running" || runState.stage === "analyzing"}>
+              <span className={runState.stage === "running" || runState.stage === "analyzing" ? "run-spinner" : "run-symbol"} aria-hidden="true">{runState.stage === "running" || runState.stage === "analyzing" ? "" : "▶"}</span>
+              {runState.stage === "running" ? "EXECUTING REPLAY" : runState.stage === "analyzing" ? "ANALYZING OUTCOME" : isComplete ? "RUN ECONOMIC TEST AGAIN" : "RUN ECONOMIC TEST"}
               <span className="run-arrow" aria-hidden="true">↗</span>
             </button>
-            {runState === "complete" && <button type="button" className="reset-button" onClick={resetReplay}>RESET TRACE</button>}
+            {runState.stage !== "configure" && <button type="button" className="reset-button" onClick={resetReplay}>RESET EXPERIMENT</button>}
           </div>
           <p className="replay-note"><span>i</span> This replays a verified run. Browser actions never submit transactions.</p>
         </aside>
@@ -219,12 +218,12 @@ export default function App() {
               <div className="section-kicker"><span>02</span> OBSERVE EXECUTION</div>
               <h2 id="trace-title">EXECUTION TRACE <span>/ {scenarioLabels[scenario]}</span></h2>
             </div>
-            <div className={`run-state-chip ${runState}`} aria-live="polite"><span />{runState === "idle" ? "AWAITING REPLAY" : runState === "running" ? "REPLAY IN PROGRESS" : "TRACE COMPLETE"}</div>
+            <div className={`run-state-chip ${runState.stage}`} aria-live="polite"><span />{runState.stage === "configure" ? "CONFIGURE" : runState.stage === "running" ? "EXECUTING REPLAY" : runState.stage === "analyzing" ? "RECONCILING OUTCOME" : "ANALYSIS COMPLETE"}</div>
           </div>
 
-          <div className={`trace-console ${runState === "complete" ? "trace-complete" : ""}`} aria-live="polite" aria-label="Execution trace">
-            <div className="console-header"><span>ARC / EXECUTION OBSERVER</span><span>{runState === "idle" ? "READY" : `${String(Math.min(visibleSteps, presentation.trace.length)).padStart(2, "0")} / ${String(presentation.trace.length).padStart(2, "0")} EVENTS`}</span></div>
-            {runState === "idle" ? (
+          <div className={`trace-console ${isComplete ? "trace-complete" : ""}`} aria-live="polite" aria-label="Execution trace">
+            <div className="console-header"><span>ARC / REPLAY OBSERVER</span><span>{runState.stage === "configure" ? "AWAITING RUN" : `${String(Math.min(runState.visibleTraceSteps, presentation.trace.length)).padStart(2, "0")} / ${String(presentation.trace.length).padStart(2, "0")} EVENTS`}</span></div>
+            {runState.stage === "configure" ? (
               <div className="trace-empty">
                 <div className="trace-empty-glyph" aria-hidden="true"><span /><span /><span /><span /></div>
                 <p>Run the selected experiment to inspect<br />the verified execution sequence.</p>
@@ -232,21 +231,34 @@ export default function App() {
               </div>
             ) : (
               <ol className="trace-list">
-                {presentation.trace.slice(0, visibleSteps).map((step, index) => (
-                  <li key={step.key} className={`trace-step tone-${step.tone} ${index === visibleSteps - 1 && runState === "running" ? "trace-active" : ""}`}>
+                {presentation.trace.slice(0, runState.visibleTraceSteps).map((step, index) => (
+                  <li key={step.key} className={`trace-step tone-${step.tone} ${index === runState.visibleTraceSteps - 1 && runState.stage === "running" ? "trace-active" : ""}`}>
                     <span className="trace-index">{String(index + 1).padStart(2, "0")}</span>
                     <span className="trace-marker" aria-hidden="true">{step.tone === "success" ? "✓" : step.tone === "danger" ? "×" : step.tone === "warning" ? "!" : "›"}</span>
                     <span className="trace-step-copy"><strong>{step.label}</strong><small>{step.detail}</small></span>
                     {step.tag && <span className={`trace-tag tag-${step.tone}`}>{step.tag}</span>}
                   </li>
                 ))}
-                {runState === "running" && <li className="trace-cursor"><span /> Evaluating recorded evidence…</li>}
+                {runState.stage === "running" && <li className="trace-cursor"><span /> Replaying recorded evidence…</li>}
               </ol>
             )}
             <div className="console-footer"><span>INTENT <code>{abbreviate(evidence.intent.intentId, 12, 8)}</code></span><span>RECEIPT FINALITY <b>INCLUDED</b></span></div>
           </div>
 
-          {runState === "complete" && (
+          {runState.stage === "analyzing" && (
+            <div className="analysis-sequence" aria-live="polite">
+              {[
+                `Receipts · ${successReceipts} successful`,
+                `Settlement events · ${matchingEvents} matched`,
+                `Recipient balance · +${formatUsdc6(evidence.recipientDeltaUsdc6)} USDC`,
+                "Evaluating economic invariants",
+              ].slice(0, runState.visibleAnalysisSteps + 1).map((label, index) => (
+                <div className="analysis-step" key={label}><span>{index < runState.visibleAnalysisSteps ? "✓" : "◌"}</span>{label}</div>
+              ))}
+            </div>
+          )}
+
+          {isComplete && (
             <div className={`receipt-strip ${verdictFailed ? "receipt-strip-fail" : "receipt-strip-pass"}`}>
               <div className="receipt-strip-label"><span>BLOCKCHAIN STATUS</span><strong>RECEIPTS RECORDED</strong></div>
               <div className="receipt-tally success-tally"><b>✓</b><strong>{successReceipts}</strong><span>SUCCESS</span></div>
@@ -257,7 +269,7 @@ export default function App() {
         </section>
       </section>
 
-      {runState === "complete" && (
+      {isComplete && (
         <>
           <section className={`verdict-section ${verdictFailed ? "verdict-fail" : "verdict-pass"}`} aria-labelledby="verdict-title">
             <div className="verdict-lead">
@@ -320,7 +332,7 @@ export default function App() {
         </>
       )}
 
-      <section className="matrix-section" aria-labelledby="matrix-title">
+      {isComplete && <details className="qualification-disclosure"><summary>VALIDATION / QUALIFICATION MATRIX</summary><section className="matrix-section" aria-labelledby="matrix-title">
         <div className="matrix-heading"><div><div className="section-kicker"><span>05</span> QUALIFICATION RECORD</div><h2 id="matrix-title">THE BEHAVIORAL MATRIX</h2></div><span>LIVE ARC TESTNET · VERIFIED EVIDENCE</span></div>
         <div className="matrix-table" role="table" aria-label="Arc Testnet qualification matrix">
           <div className="matrix-row matrix-head" role="row"><span>SCENARIO</span><span>UNSAFE</span><span>FIXED</span></div>
@@ -330,7 +342,7 @@ export default function App() {
             return <div className={`matrix-row ${scenario === item.id ? "matrix-current" : ""}`} role="row" key={item.id}><span>{item.title}</span><span className={unsafe === "PASS" ? "matrix-pass" : "matrix-fail"}><i>{unsafe === "PASS" ? "✓" : "×"}</i> {unsafe}</span><span className="matrix-pass"><i>✓</i> {fixed}</span></div>;
           })}
         </div>
-      </section>
+      </section></details>}
 
       <footer className="site-footer">
         <div className="footer-brand"><BrandMark /><span>SAZUME</span></div>
@@ -338,7 +350,7 @@ export default function App() {
         <div className="footer-status"><span>MAINNET</span><strong>NOT DEPLOYED</strong></div>
         <span className="footer-version">EVIDENCE SNAPSHOT · ARC TESTNET · 0.1</span>
       </footer>
-      <div className="sr-only" aria-live="polite">{runState === "complete" ? `Replay complete. Economic intent ${evidence.verdict === "PASS" ? "preserved" : "not preserved"}.` : ""}</div>
+      <div className="sr-only" aria-live="polite">{isComplete ? `Replay complete. Economic intent ${evidence.verdict === "PASS" ? "preserved" : "not preserved"}.` : ""}</div>
     </main>
   );
 }
