@@ -191,6 +191,26 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--green); outline
 .tone-warning .trace-marker { color: var(--amber); }
 .tone-danger .trace-marker { color: var(--red); }
 .tone-danger .trace-step-copy strong { color: #ff9b94; }
+.trace-step { grid-template-columns: 76px 15px minmax(0, 1fr) auto; }
+.trace-time { padding-top: 2px; color: #718078; font: 8px var(--mono); }
+.intent-flow { margin-top: 15px; padding: 12px 13px; border: 1px solid #303735; background: rgba(16, 20, 19, .76); }
+.intent-flow-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #849087; font: 8px var(--mono); letter-spacing: .06em; }
+.intent-flow-head code { min-width: 0; overflow: hidden; color: #c4cec5; text-overflow: ellipsis; }
+.intent-flow-rail { display: flex; align-items: stretch; gap: 10px; margin-top: 12px; }
+.intent-flow-source, .intent-flow-tx { min-width: 0; flex: 1; padding: 9px 10px; border-left: 1px solid #566b59; background: #111614; }
+.intent-flow-source small, .intent-flow-tx small { display: block; color: #77837b; font: 7px var(--mono); letter-spacing: .07em; }
+.intent-flow-source strong, .intent-flow-tx strong { display: block; margin-top: 5px; color: #dce5dc; font: 11px var(--mono); }
+.intent-flow-tx.success strong { color: var(--green); }
+.intent-flow-tx.reverted strong { color: var(--amber); }
+.intent-flow-tx code { display: block; overflow: hidden; margin-top: 4px; color: #77837b; text-overflow: ellipsis; font: 8px var(--mono); }
+.intent-flow > p { margin: 10px 0 0; color: #69766e; font: 8px/1.4 var(--mono); }
+.analysis-sequence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; margin-top: 12px; background: var(--line); border: 1px solid var(--line); }
+.analysis-step { display: flex; gap: 8px; padding: 10px; background: #0f1312; color: #b2bdb3; font: 8px/1.4 var(--mono); }
+.analysis-step > span { color: var(--green); }
+.qualification-disclosure { border-bottom: 1px solid var(--line); }
+.qualification-disclosure > summary { padding: 17px 0; color: #9ba69e; cursor: pointer; font: 9px var(--mono); letter-spacing: .08em; }
+.fixture-switch button { min-height: 50px; }
+.fixture-switch button small { display: block; margin: 4px 5px 0; color: #7c8780; font: 7px var(--mono); letter-spacing: 0; }
 .trace-tag { align-self: start; margin-top: 1px; color: #7d8982; font: 8px var(--mono); letter-spacing: .055em; }
 .tag-success { color: var(--green); }
 .tag-warning { color: var(--amber); }
@@ -386,8 +406,11 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--green); outline
   .trace-toolbar h2 { font-size: 15px; }
   .trace-toolbar h2 span { display: block; margin-top: 4px; font-size: 8px; }
   .run-state-chip { align-self: flex-start; }
-  .trace-step { grid-template-columns: 18px 12px minmax(0, 1fr); gap: 6px; }
+  .trace-step { grid-template-columns: 62px 12px minmax(0, 1fr); gap: 6px; }
   .trace-tag { grid-column: 3; margin-top: -1px; }
+  .intent-flow-head { align-items: flex-start; flex-direction: column; }
+  .intent-flow-rail { flex-direction: column; }
+  .analysis-sequence { grid-template-columns: 1fr; }
   .trace-step-copy strong { font-size: 10px; }
   .trace-step-copy small { font-size: 8px; }
   .console-footer { font-size: 7px; padding: 0 7px; }

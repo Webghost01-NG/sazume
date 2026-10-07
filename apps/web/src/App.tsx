@@ -7,7 +7,7 @@ import {
   type Fixture,
   type ScenarioKey,
 } from "./lib/evidenceProvider.js";
-import { buildRunPresentation } from "./lib/presentation.js";
+import { buildRunPresentation, formatReplayClock } from "./lib/presentation.js";
 import { initialRunState, runMachineReducer } from "./lib/runMachine.js";
 
 const scenarios: Array<{ id: ScenarioKey; number: string; title: string; description: string }> = [
@@ -233,7 +233,7 @@ export default function App() {
               <ol className="trace-list">
                 {presentation.trace.slice(0, runState.visibleTraceSteps).map((step, index) => (
                   <li key={step.key} className={`trace-step tone-${step.tone} ${index === runState.visibleTraceSteps - 1 && runState.stage === "running" ? "trace-active" : ""}`}>
-                    <span className="trace-index">{String(index + 1).padStart(2, "0")}</span>
+                    <time className="trace-time">+{formatReplayClock(step.presentationMs)}</time>
                     <span className="trace-marker" aria-hidden="true">{step.tone === "success" ? "✓" : step.tone === "danger" ? "×" : step.tone === "warning" ? "!" : "›"}</span>
                     <span className="trace-step-copy"><strong>{step.label}</strong><small>{step.detail}</small></span>
                     {step.tag && <span className={`trace-tag tag-${step.tone}`}>{step.tag}</span>}
@@ -244,6 +244,24 @@ export default function App() {
             )}
             <div className="console-footer"><span>INTENT <code>{abbreviate(evidence.intent.intentId, 12, 8)}</code></span><span>RECEIPT FINALITY <b>INCLUDED</b></span></div>
           </div>
+
+          {runState.stage !== "configure" && (
+            <section className="intent-flow" aria-label="Transactions linked to the same economic intent">
+              <div className="intent-flow-head"><span>ONE ECONOMIC INTENT</span><code>{evidence.intent.intentId}</code><span>SAME ID ON RETRY</span></div>
+              <div className="intent-flow-rail">
+                <div className="intent-flow-source"><small>ECONOMIC INTENT</small><strong>{formatUsdc6(evidence.qualificationAmountUsdc6)} USDC</strong></div>
+                {presentation.trace.slice(0, runState.visibleTraceSteps).filter((step) => step.transaction).map((step, index) => (
+                  <div className={`intent-flow-tx ${step.transaction?.status}`} key={step.transaction?.hash}>
+                    <span aria-hidden="true" />
+                    <small>TX {String(index + 1).padStart(2, "0")}</small>
+                    <strong>{step.transaction?.status === "success" ? "SUCCESS" : "REVERTED"}</strong>
+                    <code>{abbreviate(step.transaction?.hash ?? "", 10, 8)}</code>
+                  </div>
+                ))}
+              </div>
+              <p>Blockchain receipts describe execution. Sazume checks whether the economic intent survived it.</p>
+            </section>
+          )}
 
           {runState.stage === "analyzing" && (
             <div className="analysis-sequence" aria-live="polite">

@@ -1,11 +1,17 @@
 import type { Fixture, RunEvidence, ScenarioKey } from "./evidenceProvider.js";
 
+export type TraceTone = "neutral" | "success" | "warning" | "danger";
+export type TraceKind = "intent" | "transaction" | "fault" | "retry" | "callback" | "fulfillment";
+
 export interface TraceStep {
   key: string;
+  kind: TraceKind;
   label: string;
   detail: string;
-  tone: "neutral" | "success" | "warning" | "danger";
+  tone: TraceTone;
+  presentationMs: number;
   tag?: string;
+  transaction?: RunEvidence["transactions"][number];
 }
 
 export interface RunPresentation {
@@ -15,30 +21,39 @@ export interface RunPresentation {
   trace: TraceStep[];
 }
 
-const traceLabels: Record<string, { label: string; detail: (metadata?: Record<string, unknown>) => string; tone: TraceStep["tone"] }> = {
+const actionDescriptions: Record<string, { label: string; detail: (evidence: RunEvidence, metadata?: Record<string, unknown>) => string; kind: TraceKind; tone: TraceTone }> = {
   timeout: {
-    label: "Acknowledgement window expired",
-    detail: (metadata) => metadata?.phase === "before-settlement" ? "Request timed out before a settlement was committed." : "Settlement committed; acknowledgement was lost before the application saw it.",
+    label: "Acknowledgement lost",
+    detail: (_evidence, metadata) => metadata?.phase === "before-settlement"
+      ? "Request timed out before payment committed."
+      : "Payment committed. The application did not receive its acknowledgement.",
+    kind: "fault",
     tone: "warning",
   },
   retry: {
-    label: "Retry keeps the same economic intent",
-    detail: () => "The retry carries the exact same machine intent ID.",
+    label: "Retry triggered",
+    detail: (evidence) => `Same economic intent · ${evidence.intent.intentId}`,
+    kind: "retry",
     tone: "warning",
   },
   callback: {
     label: "Application callback received",
-    detail: (metadata) => metadata?.duplicate ? "Duplicate callback delivered to the fulfillment handler." : "First callback delivered after settlement.",
+    detail: (_evidence, metadata) => metadata?.duplicate
+      ? "Duplicate callback delivered to the fulfillment handler."
+      : "Callback delivered after settlement.",
+    kind: "callback",
     tone: "neutral",
   },
   "fulfillment-attempt": {
     label: "Fulfillment attempt",
-    detail: () => "Offchain application state attempts to fulfill the paid service.",
+    detail: () => "Application attempts to fulfill the paid service.",
+    kind: "fulfillment",
     tone: "neutral",
   },
   "fulfillment-observed": {
     label: "Fulfillment recorded",
-    detail: () => "Observed fulfillment count is included in the invariant evaluation.",
+    detail: () => "Offchain application state records this fulfillment.",
+    kind: "fulfillment",
     tone: "success",
   },
 };
@@ -47,71 +62,79 @@ export function buildRunPresentation(fixture: Fixture, scenario: ScenarioKey, ev
   const trace: TraceStep[] = [];
   let attemptIndex = 0;
 
+  const append = (step: Omit<TraceStep, "presentationMs">) => {
+    trace.push({ ...step, presentationMs: trace.length * 560 });
+  };
+
+  append({
+    key: "intent-created",
+    kind: "intent",
+    label: "Economic intent created",
+    detail: `${formatUsdc6(evidence.qualificationAmountUsdc6)} USDC · settle no more than once`,
+    tone: "neutral",
+    tag: "INTENT",
+  });
+
   for (const event of evidence.trace) {
     if (event.type === "settlement-attempt") {
-      const tx = evidence.transactions[attemptIndex];
-      const attempt = ++attemptIndex;
-      trace.push({
-        key: `attempt-${attempt}`,
-        label: `Settlement attempt ${attempt}`,
-        detail: attempt > 1 ? `Retry uses intent ${evidence.intent.intentId.slice(0, 12)}… again.` : `Intent ${evidence.intent.intentId.slice(0, 12)}… submitted to the fixture.`,
+      attemptIndex += 1;
+      append({
+        key: `attempt-${attemptIndex}`,
+        kind: "transaction",
+        label: `Settlement attempt ${String(attemptIndex).padStart(2, "0")}`,
+        detail: `Intent ${evidence.intent.intentId.slice(0, 12)}… submitted.`,
         tone: "neutral",
-        tag: "ATTEMPT",
+        tag: `ATTEMPT ${String(attemptIndex).padStart(2, "0")}`,
       });
-      if (tx) {
-        const matchingEvent = evidence.matchingEvents.find((item) => item.txHash.toLowerCase() === tx.hash.toLowerCase());
-        const reverted = tx.status === "reverted";
-        trace.push({
-          key: `receipt-${attempt}`,
-          label: reverted ? "Duplicate settlement rejected" : "Arc transaction included — SUCCESS",
-          detail: reverted
-            ? "The contract prevented a second transfer; this receipt emitted no settlement event."
-            : `Block ${tx.blockNumber} · receipt ${tx.hash.slice(0, 10)}…`,
-          tone: reverted ? "warning" : "success",
-          tag: reverted ? "REVERTED" : "SUCCESS",
-        });
-        if (matchingEvent) {
-          trace.push({
-            key: `event-${attempt}`,
-            label: "IntentSettled event matched",
-            detail: `${matchingEvent.amountUsdc6} USDC6 attributed to this intent.`,
-            tone: "success",
-            tag: "EVENT",
-          });
-        }
-      }
       continue;
     }
 
-    if (event.type === "settlement-observed") continue;
-    const mapped = traceLabels[event.type];
-    if (mapped) {
-      trace.push({
-        key: `scenario-${event.sequence}`,
-        label: mapped.label,
-        detail: event.type === "retry"
-          ? `${mapped.detail(event.metadata)} Intent ID: ${evidence.intent.intentId}`
-          : mapped.detail(event.metadata),
-        tone: mapped.tone,
-        tag: event.type === "timeout" ? "TIMEOUT" : event.type === "retry" ? "SAME INTENT" : undefined,
+    if (event.type === "settlement-observed") {
+      const transaction = evidence.transactions[attemptIndex - 1];
+      if (!transaction) continue;
+      const matchingEvent = evidence.matchingEvents.find((item) => item.txHash.toLowerCase() === transaction.hash.toLowerCase());
+      const successful = transaction.status === "success";
+      append({
+        key: `receipt-${attemptIndex}`,
+        kind: "transaction",
+        label: successful ? "Transaction included" : "Duplicate settlement reverted",
+        detail: [
+          successful ? "Receipt SUCCESS" : "Receipt REVERTED · no second transfer",
+          matchingEvent ? "IntentSettled event matched" : "No matching settlement event",
+          `Block ${transaction.blockNumber}`,
+        ].join(" · "),
+        tone: successful ? "success" : "warning",
+        tag: successful ? "SUCCESS" : "REVERTED",
+        transaction,
       });
+      continue;
     }
+
+    const mapped = actionDescriptions[event.type];
+    if (!mapped) continue;
+    append({
+      key: `${event.type}-${event.sequence}`,
+      kind: mapped.kind,
+      label: mapped.label,
+      detail: mapped.detail(evidence, event.metadata),
+      tone: mapped.tone,
+      tag: event.type === "timeout" ? "FAULT INJECTED" : event.type === "retry" ? "SAME INTENT" : undefined,
+    });
   }
 
-  trace.push({
-    key: "economic-observation",
-    label: "Recipient USDC6 balance delta corroborated",
-    detail: `Δ ${evidence.recipientDeltaUsdc6} USDC6 · receipt, event, and balance evidence agree.`,
-    tone: "success",
-    tag: "OBSERVED",
-  });
-  trace.push({
-    key: "invariant-evaluation",
-    label: "Economic invariants evaluated",
-    detail: evidence.verdict === "PASS" ? "All applicable invariants preserved." : "Successful transactions did not preserve the intended economic outcome.",
-    tone: evidence.verdict === "PASS" ? "success" : "danger",
-    tag: evidence.verdict,
-  });
-
   return { fixture, scenario, evidence, trace };
+}
+
+export function formatReplayClock(milliseconds: number): string {
+  const minutes = Math.floor(milliseconds / 60_000).toString().padStart(2, "0");
+  const seconds = Math.floor((milliseconds % 60_000) / 1_000).toString().padStart(2, "0");
+  const remainder = (milliseconds % 1_000).toString().padStart(3, "0");
+  return `${minutes}:${seconds}.${remainder}`;
+}
+
+function formatUsdc6(value: string): string {
+  const amount = BigInt(value);
+  const whole = amount / 1_000_000n;
+  const fraction = (amount % 1_000_000n).toString().padStart(6, "0");
+  return `${whole}.${fraction}`;
 }
