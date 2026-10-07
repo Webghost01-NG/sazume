@@ -4,7 +4,23 @@
 >
 > Sazume tests whether programmable-money applications preserve their intended economic outcome under retries, timeouts, and duplicate execution.
 
-Sazume's core economic reliability model has been validated offchain. The current integration phase adds Solidity-backed settlement and Arc-aware observation before any mainnet deployment. No mainnet deployment or payment has occurred.
+Sazume tests programmable-money applications against their intended economic outcomes, not just successful transaction receipts. Its core model passed the offchain falsification spike and the Solidity/Arc Testnet qualification. Arc Mainnet has **not** been deployed or tested, and no Mainnet payment has occurred.
+
+## Product interface
+
+The React + TypeScript interface lives in [`apps/web`](apps/web). It replays accepted Arc Testnet evidence for the four validated scenarios against the unsafe and idempotent fixtures. The browser does not call an RPC or broadcast transactions. Receipt status, matching settlement events, recipient balance movement, and invariant verdict are presented separately so successful transactions can visibly coexist with an economic failure.
+
+The demonstrated qualification amount is **0.010000 USDC** (`10,000` USDC6). The CLI narrative uses a conceptual **1 USDC** obligation; it is not the amount used in the Testnet qualification. The replay's transaction and contract links are drawn from the public records in [`evidence/testnet`](evidence/testnet/).
+
+Verified Arc Testnet fixtures:
+
+| Fixture | Address |
+| --- | --- |
+| UnsafeSettlement | `0x8cd2da9e45d18c47a803f065a3625ae68bf37b17` |
+| IdempotentSettlement | `0x0908e0409d593409d251306302fdca0c45198b9c` |
+| USDC | `0x3600000000000000000000000000000000000000` |
+
+These are Testnet addresses only. Mainnet deployment remains pending.
 
 ## Run it
 
@@ -12,12 +28,16 @@ Sazume's core economic reliability model has been validated offchain. The curren
 npm install
 npm test
 npm run typecheck
+npm run dev
+npm run build
 npm run demo
 npm run test:contracts
 npm run demo:arc-local
 npm run test:contracts:arc
 npm run demo:arc-foundry-local
 ```
+
+`npm run dev` starts the static evidence replay UI at the Vite local URL. `npm run build` creates the deployable static bundle in `dist/`. The frontend uses the same recorded Sazume results and evidence; it does not reimplement the economic invariants in React.
 
 `test:contracts` uses local Foundry with a mock ERC-20. `demo:arc-local` deploys the Solidity fixtures to ordinary Anvil (chain ID 31337) and runs the shared scenarios through the receipt/log observer. This is local EVM execution, **not Arc Foundry, an Arc fork, or evidence of Arc network execution**. See [Arc assumptions](docs/arc-assumptions.md).
 
