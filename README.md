@@ -14,6 +14,8 @@ This is a **verified evidence replay**, not a live execution. The browser does n
 
 The interface uses a monochrome conformance-folio design. Configure, execution, reconciliation, verdict, and proof are revealed in sequence; the initial view contains no completed outcome or transaction details. Captured desktop, mobile, and replay-state QA images are in [`.impeccable/review`](.impeccable/review), and the implemented visual system is recorded in [`DESIGN.md`](DESIGN.md).
 
+Developer documentation is served by the same website at [`/docs`](https://sazume.vercel.app/docs), including installation, concepts, CLI, integration, Arc evidence, and reference pages. The product/package surface is still an unpublished release candidate; public npm install instructions are intentionally not provided.
+
 The demonstrated qualification amount is **0.010000 USDC** (`10,000` USDC6). The CLI narrative uses a conceptual **1 USDC** obligation; it is not the amount used in the Testnet qualification. The replay's transaction and contract links are drawn from the public records in [`evidence/testnet`](evidence/testnet/).
 
 Verified Arc Testnet fixtures:
@@ -55,13 +57,15 @@ npm run --silent sazume -- test --adapter idempotent --json
 
 The unsafe full matrix exits non-zero because observed settlement and fulfillment state violates invariants. The idempotent matrix exits zero. `--json` emits machine-readable results with bigint values encoded as decimal strings, and preserves the same exit status for CI. `--trace` includes deterministic scenario events. Scenario IDs are `normal`, `timeout-before-settlement`, `timeout-after-settlement`, and `duplicate-callback`.
 
-To connect an application, implement the chain-independent [`EconomicAdapter`](packages/core/src/adapter.ts), define an intent with `defineIntent` and reusable invariants, then export a `sazume.config.ts` containing `{ intent, adapter, scenarios }`. The complete small example is [`examples/paid-report`](examples/paid-report): its `PaidReportAdapter` stands in for the application's payment/fulfillment calls and reports observed state. Run it with:
+To connect an application, implement the chain-independent [`EconomicAdapter`](packages/core/src/adapter.ts), define an intent with `defineIntent` and reusable invariants, then export a `sazume.config.mjs` containing `{ intent, adapter, scenarios }`. The complete small example is [`examples/paid-report`](examples/paid-report): its `PaidReportAdapter` stands in for the application's payment/fulfillment calls and reports observed state. Run it with:
 
 ```bash
-npm run sazume -- test --config examples/paid-report/sazume.config.ts
+npm run sazume -- test --config examples/paid-report/sazume.config.mjs
 ```
 
-Replace that example adapter with your own application integration. The runner resets it before each scenario, observes the outcome, and evaluates the intent's invariants; the CLI only selects the configuration, presents the core results, and maps the overall verdict to an exit code. `--scenario <id>` can select one canonical failure scenario for a configured adapter. `--init` is intentionally not provided in v0.1; the example config is the scaffold.
+Replace that example adapter with your own application integration. The runner resets it before each scenario, observes the outcome, and evaluates the intent's invariants; the CLI only selects the configuration, presents the core results, and maps the overall verdict to an exit code. `--scenario <id>` can select one canonical failure scenario for a configured adapter. Configuration files are trusted executable JavaScript. They must use `.mjs`, `.js`, or `.cjs`; compile TypeScript configs before loading. `--init` is intentionally not provided in v0.1; the example config is the scaffold.
+
+The package release candidates are `@sazume/core` and `@sazume/cli` (`0.1.0-rc.1`), but they are private and unpublished. Validate the public boundary locally with `npm run test:external-consumer`; this builds and installs the actual package tarballs in an isolated consumer project. The publication names and license still require owner approval.
 
 `npm run dev` starts the static evidence replay UI at the Vite local URL. `npm run build` creates the deployable static bundle in `dist/`. The frontend uses the same recorded Sazume results and evidence; it does not reimplement the economic invariants in React.
 

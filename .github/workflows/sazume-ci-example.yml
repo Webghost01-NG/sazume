@@ -1,0 +1,31 @@
+name: Sazume economic checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  economic-reliability:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Run economic reliability checks
+        run: node scripts/verify-ci-integration.mjs
+      - name: Save machine-readable report
+        run: npm run --silent sazume -- test --adapter idempotent --json > sazume-report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sazume-report
+          path: sazume-report.json
+
+# A real application replaces the reference adapter with its trusted
+# sazume.config.mjs. Keep CI credentials limited to what that adapter needs;
+# these reference tests use no RPC, wallet, signing key, or Mainnet endpoint.
