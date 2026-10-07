@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p apps/web/tsconfig.json",
     "dev": "vite --config apps/web/vite.config.ts",
     "build": "vite build --config apps/web/vite.config.ts",
+    "build:cli": "tsc --noEmit --target ES2022 --module NodeNext --moduleResolution NodeNext --strict --skipLibCheck packages/cli/src/index.ts examples/paid-report/sazume.config.ts",
     "preview": "vite preview --config apps/web/vite.config.ts",
     "sazume": "tsx packages/cli/src/index.ts",
     "test:contracts": "forge test --root contracts",
