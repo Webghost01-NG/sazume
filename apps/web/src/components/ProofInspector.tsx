@@ -27,18 +27,16 @@ function CopyEvidence({ value, label }: { value: string; label: string }) {
 
 export function ProofInspector({ evidence }: { evidence: RunEvidence }) {
   const successfulReceipts = evidence.transactions.filter((transaction) => transaction.status === "success").length;
-  const revertedReceipts = evidence.transactions.filter((transaction) => transaction.status === "reverted").length;
-
   return (
     <section className="proof-section" aria-labelledby="proof-title">
       <div className="proof-heading">
-        <div><div className="section-kicker"><span>04</span> PROOF INSPECTOR</div><h2 id="proof-title">PROOF OF ECONOMIC {evidence.verdict === "FAIL" ? "FAILURE" : "PRESERVATION"}</h2></div>
-        <div className="corroboration-badge"><span>✓</span> RECEIPT = EVENT = BALANCE</div>
+        <div><span className="field-label">INDEPENDENT VERIFICATION</span><h2 id="proof-title">DON’T TRUST THE VERDICT.<br /><strong>VERIFY IT.</strong></h2></div>
+        <p className="proof-equation">RECEIPT <b>=</b> EVENT <b>=</b> ECONOMIC MOVEMENT</p>
       </div>
       <div className="proof-grid">
-        <article className="proof-cell"><div className="proof-cell-top"><span className="proof-number">A</span><span className="proof-check">✓ VERIFIED</span></div><h3>TRANSACTION RECEIPTS</h3><strong>{successfulReceipts} SUCCESS<span>{revertedReceipts > 0 ? ` · ${revertedReceipts} REVERTED` : ""}</span></strong><p>Receipt status remains separate from Sazume’s economic verdict.</p></article>
-        <article className="proof-cell"><div className="proof-cell-top"><span className="proof-number">B</span><span className="proof-check">✓ VERIFIED</span></div><h3>SETTLEMENT EVENTS</h3><strong>{evidence.matchingEvents.length} MATCHING<span> / {evidence.settlementAttempts} ATTEMPTS</span></strong><p>Intent, payer, recipient, and USDC6 amount match the recorded settlement events.</p></article>
-        <article className="proof-cell proof-balance"><div className="proof-cell-top"><span className="proof-number">C</span><span className="proof-check">✓ VERIFIED</span></div><h3>RECIPIENT BALANCE DELTA</h3><strong>+{formatUsdc6(evidence.recipientDeltaUsdc6)}<span> USDC</span></strong><p>{formatUsdc6(evidence.recipientBalanceBeforeUsdc6)} before <span className="arrow-inline">→</span> {formatUsdc6(evidence.recipientBalanceAfterUsdc6)} after</p></article>
+        <article className="proof-cell"><div className="proof-cell-top"><span>RECEIPTS</span><strong>{successfulReceipts} / {evidence.transactions.length} SUCCESSFUL</strong></div><p>Blockchain execution. Economic correctness is evaluated separately.</p></article>
+        <article className="proof-cell"><div className="proof-cell-top"><span>SETTLEMENT EVENTS</span><strong>{evidence.matchingEvents.length} / {evidence.settlementAttempts} MATCHED</strong></div><p>Intent, payer, recipient, and USDC6 match the recorded events.</p></article>
+        <article className="proof-cell proof-balance"><div className="proof-cell-top"><span>RECIPIENT BALANCE</span><strong>DELTA</strong></div><p className="balance-delta">+{formatUsdc6(evidence.recipientDeltaUsdc6)} <small>USDC</small></p><p>{formatUsdc6(evidence.recipientBalanceBeforeUsdc6)} before <span className="arrow-inline">→</span> {formatUsdc6(evidence.recipientBalanceAfterUsdc6)} after</p></article>
       </div>
 
       <div className="proof-identities">

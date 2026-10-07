@@ -27,11 +27,12 @@ describe("Sazume evidence replay interface", () => {
   it("starts in configuration without exposing a verdict, proof, or qualification matrix", () => {
     render(<App />);
 
-    expect(screen.getByText("CONFIGURE")).toBeTruthy();
+    expect(screen.getByText("READY")).toBeTruthy();
     expect(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i })).toBeTruthy();
-    expect(screen.queryByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/i })).toBeNull();
-    expect(screen.queryByRole("heading", { name: "PROVE THE OUTCOME." })).toBeNull();
-    expect(screen.queryByRole("heading", { name: "THE BEHAVIORAL MATRIX" })).toBeNull();
+    expect(screen.queryByRole("heading", { name: /ECONOMIC INTENT.*PRESERVED/i })).toBeNull();
+    expect(screen.queryByRole("heading", { name: /VERIFY IT/i })).toBeNull();
+    expect(screen.queryByText(/OBSERVED SETTLEMENTS/i)).toBeNull();
+    expect(screen.queryByText(/OPEN VALIDATION RECORD/)).toBeTruthy();
     expect(screen.queryByText(/5c3a95adc37d/)).toBeNull();
   });
 
@@ -39,14 +40,15 @@ describe("Sazume evidence replay interface", () => {
     vi.useFakeTimers();
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i }));
-    expect(screen.getAllByText("EXECUTING REPLAY").length).toBeGreaterThan(0);
+    expect(screen.getByText("EXECUTING")).toBeTruthy();
     expect(screen.queryByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/i })).toBeNull();
     await finishReplay();
 
     expect(screen.getByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/ })).toBeTruthy();
-    expect(screen.getByRole("heading", { name: /PROOF OF ECONOMIC FAILURE/i })).toBeTruthy();
-    expect(screen.getByText(/2 SUCCESS/)).toBeTruthy();
-    expect(screen.getByText(/0.020000 USDC/)).toBeTruthy();
+    expect(screen.getByRole("heading", { name: /VERIFY IT/i })).toBeTruthy();
+    expect(screen.getAllByText("SUCCESS").length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/0\.020000/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/SAME ECONOMIC INTENT/i)).toBeTruthy();
     expect(screen.getAllByRole("link", { name: /OPEN IN ARC EXPLORER/i })).toHaveLength(2);
   });
 
@@ -59,13 +61,34 @@ describe("Sazume evidence replay interface", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /IDEMPOTENT/i }));
     expect(screen.queryByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/ })).toBeNull();
-    expect(screen.getByText("CONFIGURE")).toBeTruthy();
+    expect(screen.getByText("READY")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i }));
     await finishReplay();
 
     expect(screen.getByRole("heading", { name: /ECONOMIC INTENT.*PRESERVED/ })).toBeTruthy();
-    expect(document.querySelector(".receipt-strip")?.textContent).toMatch(/1.*SUCCESS.*1.*REVERTED/);
-    expect(screen.getByRole("heading", { name: /PROOF OF ECONOMIC PRESERVATION/i })).toBeTruthy();
-    expect(screen.getByText("+0.010000")).toBeTruthy();
+    expect(screen.getByText(/DUPLICATE PREVENTED/)).toBeTruthy();
+    expect(screen.getByRole("heading", { name: /VERIFY IT/i })).toBeTruthy();
+    expect(screen.getAllByText(/0\.010000/).length).toBeGreaterThan(0);
+  });
+
+  it("keeps proof details hidden until economic reconciliation is complete", async () => {
+    vi.useFakeTimers();
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i }));
+    expect(screen.queryByRole("heading", { name: /VERIFY IT/i })).toBeNull();
+    await finishReplay();
+    expect(screen.getByRole("heading", { name: /VERIFY IT/i })).toBeTruthy();
+  });
+
+  it("derives the receipt count and recipient movement shown in proof from its evidence record", async () => {
+    vi.useFakeTimers();
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i }));
+    await finishReplay();
+
+    expect(screen.getByText("2 / 2 SUCCESSFUL")).toBeTruthy();
+    expect(screen.getByText("2 / 2 MATCHED")).toBeTruthy();
+    expect(screen.getAllByText(/0\.020000/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/chain ID 5042002/)).toBeTruthy();
   });
 });
