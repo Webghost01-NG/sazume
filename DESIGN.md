@@ -81,6 +81,20 @@ The proof inspector distinguishes successful receipts, matching intent settlemen
 - **Proof inspector:** transaction and balance corroboration appears only after completion.
 - **Editorial explanation and qualification:** separate chain correctness from economic correctness; place the full validation matrix behind native disclosure.
 
+## Documentation surface — Read mode
+
+The documentation route extends the same monochrome conformance language. It uses a quiet, sticky index rail beside a readable article column, with a compact documentation masthead, breadcrumb, display title, short description, editorial divider, prose, code examples, and return links. Its form is a reading surface rather than a second experiment dashboard. The selected page is marked with `aria-current="page"`, white text, a white lower rule, and an arrow; unselected links stay gray and are separated by fine rules.
+
+The article remains bounded to a readable measure (`70ch` for prose). Code blocks use the existing monospace stack, horizontal rules, and a neutral `#0d0d0d` surface; they are scrollable when long. No syntax-color palette or syntax-highlighting behavior is implemented. The code-copy control reports `COPY`, `COPIED`, or `SELECT CODE` according to clipboard capability/result, and announces copy success or unavailability through a polite status region. The source remains selectable if clipboard access is unavailable.
+
+Responsive documentation layout is defined alongside the home experience in `apps/web/src/styles.css`:
+
+- `1100px`: narrow the rail and reduce the rail/article gap.
+- `800px`: move the index above the article as a two-column link list; remove the desktop sticky positioning and hide the redundant Testnet/Mainnet rail note.
+- `560px`: tighten the masthead and page gutters, hide the expanded brand suffix, reduce article/code text sizing, and stack the article footer.
+
+The docs inherit the global focus outline, neutral palette, and system-safe typography. Native anchors provide keyboard navigation; current-page state is textual/structural rather than hue-based. Code-copy feedback does not rely on color alone. These are descriptions of the implemented route and CSS, not additional global tokens.
+
 ## Design constraints
 
 - Do not add chromatic status colors, gradients, glass surfaces, decorative dashboard tiles, or repeated rounded cards.

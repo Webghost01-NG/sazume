@@ -191,6 +191,7 @@ export default function App() {
       <header className="masthead">
         <a className="brand" href="#top" aria-label="Sazume home"><BrandMark /><span>SAZUME</span></a>
         <span className="brand-purpose">ECONOMIC RELIABILITY TESTING</span>
+        <a className="docs-link" href="/docs">DOCUMENTATION ↗</a>
         <div className="network-proof"><span>{evidence.network.toUpperCase()}</span><i aria-hidden="true">/</i><span>VERIFIED EVIDENCE</span></div>
       </header>
 
@@ -239,7 +240,7 @@ export default function App() {
 
         <div className="experiment-actions">
           <button type="button" className="run-button" onClick={() => dispatch({ type: "start" })} disabled={isActive}>
-            <span>{isActive ? "RUNNING" : isComplete ? "REPLAY TEST" : "RUN ECONOMIC TEST"}</span><span aria-hidden="true">→</span>
+            <span>{isActive ? "REPLAYING VERIFIED EVIDENCE" : isComplete ? "RUN VERIFIED REPLAY AGAIN" : "RUN VERIFIED REPLAY"}</span><span aria-hidden="true">→</span>
           </button>
           {runState.stage !== "configure" && <button className="reset-button" type="button" onClick={resetReplay}>RESET EXPERIMENT</button>}
           <span className="run-mode-copy">VERIFIED EVIDENCE REPLAY<br />This replays a previously executed Arc Testnet run. No new transaction is broadcast from this browser.</span>

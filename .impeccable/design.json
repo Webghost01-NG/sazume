@@ -106,5 +106,36 @@
       "block and gas fields",
       "Arc Testnet explorer links"
     ]
+  },
+  "documentationSurface": {
+    "mode": "Read",
+    "visualRelationship": "Extends the existing monochrome conformance system; introduces no new palette or typography tokens",
+    "desktopComposition": "Compact documentation masthead, sticky index rail, bounded article column, breadcrumb, title/description, structural rules, prose and code examples",
+    "breakpoints": [
+      {
+        "maxWidth": "1100px",
+        "behavior": "Narrow index rail and reduce gap to article"
+      },
+      {
+        "maxWidth": "800px",
+        "behavior": "Move index above article as a two-column link list; disable sticky rail and hide its redundant network note"
+      },
+      {
+        "maxWidth": "560px",
+        "behavior": "Tighten masthead and content gutters, hide the brand suffix, reduce article/code type, and stack footer links"
+      }
+    ],
+    "navigation": {
+      "currentPage": "aria-current=page, white text, white lower rule, and arrow marker",
+      "keyboard": "Native anchors; global visible focus outline"
+    },
+    "codeExamples": {
+      "type": "Existing monospace stack; no syntax highlighting or syntax-color behavior",
+      "surface": "Neutral #0d0d0d with top/bottom rules",
+      "overflow": "Scrollable preformatted block with preserved whitespace",
+      "copyStatus": ["COPY", "COPIED", "SELECT CODE"],
+      "unavailableClipboard": "Leaves source selectable and announces clipboard unavailability in a polite status region"
+    },
+    "accessibility": "Monochrome current-page and clipboard states use text and structural indicators; navigation uses semantic nav/article/heading landmarks"
   }
 }
