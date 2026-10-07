@@ -32,17 +32,22 @@ describe("Sazume evidence replay interface", () => {
     expect(screen.queryByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/i })).toBeNull();
     expect(screen.queryByRole("heading", { name: "PROVE THE OUTCOME." })).toBeNull();
     expect(screen.queryByRole("heading", { name: "THE BEHAVIORAL MATRIX" })).toBeNull();
+    expect(screen.queryByText(/5c3a95adc37d/)).toBeNull();
   });
 
   it("keeps successful receipt status separate from an unsafe economic failure", async () => {
     vi.useFakeTimers();
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: /RUN ECONOMIC TEST/i }));
+    expect(screen.getAllByText("EXECUTING REPLAY").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/i })).toBeNull();
     await finishReplay();
 
     expect(screen.getByRole("heading", { name: /ECONOMIC INTENT.*NOT PRESERVED/ })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: /PROOF OF ECONOMIC FAILURE/i })).toBeTruthy();
     expect(screen.getByText(/2 SUCCESS/)).toBeTruthy();
     expect(screen.getByText(/0.020000 USDC/)).toBeTruthy();
+    expect(screen.getAllByRole("link", { name: /OPEN IN ARC EXPLORER/i })).toHaveLength(2);
   });
 
   it("clears the prior verdict when switching implementation and replays fixed evidence", async () => {
@@ -60,5 +65,7 @@ describe("Sazume evidence replay interface", () => {
 
     expect(screen.getByRole("heading", { name: /ECONOMIC INTENT.*PRESERVED/ })).toBeTruthy();
     expect(document.querySelector(".receipt-strip")?.textContent).toMatch(/1.*SUCCESS.*1.*REVERTED/);
+    expect(screen.getByRole("heading", { name: /PROOF OF ECONOMIC PRESERVATION/i })).toBeTruthy();
+    expect(screen.getByText("+0.010000")).toBeTruthy();
   });
 });

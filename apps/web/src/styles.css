@@ -211,6 +211,23 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--green); outline
 .qualification-disclosure > summary { padding: 17px 0; color: #9ba69e; cursor: pointer; font: 9px var(--mono); letter-spacing: .08em; }
 .fixture-switch button { min-height: 50px; }
 .fixture-switch button small { display: block; margin: 4px 5px 0; color: #7c8780; font: 7px var(--mono); letter-spacing: 0; }
+.fixture-switch button:disabled, .scenario-option:disabled { cursor: wait; opacity: .72; }
+.proof-identities { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 18px 0; border-block: 1px solid var(--line); }
+.proof-identities > div { min-width: 0; padding: 12px 12px 12px 0; }
+.proof-identities > div + div { padding-left: 12px; border-left: 1px solid var(--line); }
+.proof-identities span, .transaction-proof-context span, .transaction-proof-meta span { display: block; margin-bottom: 6px; color: #718078; font: 7px var(--mono); letter-spacing: .07em; }
+.proof-identities code, .transaction-proof-context code, .transaction-proof-meta strong { display: block; overflow-wrap: anywhere; color: #c3cdc4; font: 8px/1.5 var(--mono); }
+.proof-identities strong { color: #dce5dc; font: 13px var(--mono); }
+.transaction-proof { padding: 15px 0; border-top: 1px solid var(--line); }
+.transaction-proof-heading, .transaction-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.transaction-actions a, .copy-evidence { border: 1px solid #354139; padding: 7px 9px; color: #b2c4b4; background: transparent; font: 7px var(--mono); letter-spacing: .06em; text-decoration: none; cursor: pointer; }
+.transaction-actions a:hover, .copy-evidence:hover { border-color: var(--green); color: var(--green); }
+.transaction-hash-full { margin: 12px 0; overflow-wrap: anywhere; color: #d5dfd6; font: 10px/1.5 var(--mono); }
+.transaction-proof-context { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; padding: 10px 0; border-block: 1px solid var(--line-soft); }
+.transaction-proof-context strong { color: #b8c5b9; font: 8px/1.5 var(--mono); }
+.transaction-proof-meta { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; padding-top: 12px; }
+.transaction-proof-meta strong { font-size: 8px; white-space: nowrap; }
+.proof-source-note { margin: 14px 0 0; color: #738078; font: 8px var(--mono); }
 .trace-tag { align-self: start; margin-top: 1px; color: #7d8982; font: 8px var(--mono); letter-spacing: .055em; }
 .tag-success { color: var(--green); }
 .tag-warning { color: var(--amber); }
@@ -411,6 +428,13 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--green); outline
   .intent-flow-head { align-items: flex-start; flex-direction: column; }
   .intent-flow-rail { flex-direction: column; }
   .analysis-sequence { grid-template-columns: 1fr; }
+  .proof-identities { grid-template-columns: 1fr 1fr; }
+  .proof-identities > div:nth-child(3) { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); }
+  .proof-identities > div:nth-child(4) { border-top: 1px solid var(--line); }
+  .transaction-proof-context { grid-template-columns: 1fr; }
+  .transaction-proof-meta { grid-template-columns: 1fr 1fr; }
+  .transaction-proof-heading { align-items: flex-start; flex-direction: column; }
+  .transaction-actions { flex-wrap: wrap; justify-content: flex-start; }
   .trace-step-copy strong { font-size: 10px; }
   .trace-step-copy small { font-size: 8px; }
   .console-footer { font-size: 7px; padding: 0 7px; }

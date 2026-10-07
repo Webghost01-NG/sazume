@@ -9,6 +9,8 @@ import {
 } from "./lib/evidenceProvider.js";
 import { buildRunPresentation, formatReplayClock } from "./lib/presentation.js";
 import { initialRunState, runMachineReducer } from "./lib/runMachine.js";
+import { EconomicVerdict } from "./components/EconomicVerdict.js";
+import { ProofInspector } from "./components/ProofInspector.js";
 
 const scenarios: Array<{ id: ScenarioKey; number: string; title: string; description: string }> = [
   { id: "normal", number: "01", title: "NORMAL", description: "Settle once, then fulfill." },
@@ -16,13 +18,6 @@ const scenarios: Array<{ id: ScenarioKey; number: string; title: string; descrip
   { id: "timeout-after-settlement", number: "03", title: "TIMEOUT / AFTER SETTLEMENT", description: "Payment commits; its acknowledgement disappears." },
   { id: "duplicate-callback", number: "04", title: "DUPLICATE CALLBACK", description: "The fulfillment callback arrives twice." },
 ];
-
-const invariantDescriptions: Record<string, string> = {
-  "Settlement uniqueness": "One economic intent may settle at most once.",
-  "Recipient amount": "A completed intent delivers exactly the intended amount.",
-  "Fulfillment uniqueness": "The paid service may be fulfilled at most once.",
-  "Completion consistency": "Completion requires both settlement and fulfillment.",
-};
 
 const scenarioLabels: Record<ScenarioKey, string> = {
   normal: "NORMAL",
@@ -32,13 +27,6 @@ const scenarioLabels: Record<ScenarioKey, string> = {
 };
 
 const fixtureResults = matrixEvidence.outcomes as Array<{ fixture: Fixture; scenario: ScenarioKey; result: "PASS" | "FAIL" }>;
-
-function formatGwei(wei: string): string {
-  const value = BigInt(wei);
-  const whole = value / 1_000_000_000n;
-  const fraction = (value % 1_000_000_000n).toString().padStart(9, "0").slice(0, 3);
-  return `${whole}.${fraction} Gwei`;
-}
 
 function CopyValue({ value, label, className = "" }: { value: string; label: string; className?: string }) {
   const [copied, setCopied] = useState(false);
@@ -138,7 +126,7 @@ export default function App() {
           <span className="status-dot" />
           <span>VERIFIED EVIDENCE REPLAY</span>
           <span className="status-divider" />
-          <span className="network-label">ARC TESTNET <span>· 5042002</span></span>
+          <span className="network-label">{evidence.network.toUpperCase()} <span>· {evidence.chainId}</span></span>
         </div>
       </header>
 
@@ -171,7 +159,7 @@ export default function App() {
             <p className="intent-statement">PAY RECIPIENT<br />EXACTLY ONCE</p>
             <div className="intent-value-row">
               <div><span>OBLIGATION</span><strong>{formatUsdc6(evidence.qualificationAmountUsdc6)} <small>USDC</small></strong></div>
-              <div><span>SETTLEMENTS</span><strong>≤ 1</strong></div>
+              <div><span>MAX SETTLEMENTS</span><strong>{evidence.invariantResults.find((item) => item.name === "Settlement uniqueness")?.expected ?? "≤ 1"}</strong></div>
             </div>
             {runState.stage === "configure" ? <p className="intent-human-id">VERIFIED QUALIFICATION · 0.010000 USDC</p> : <div className="intent-id-row"><span>SAME ECONOMIC INTENT</span><CopyValue value={evidence.intent.intentId} label="economic intent ID" /></div>}
           </section>
@@ -222,7 +210,7 @@ export default function App() {
           </div>
 
           <div className={`trace-console ${isComplete ? "trace-complete" : ""}`} aria-live="polite" aria-label="Execution trace">
-            <div className="console-header"><span>ARC / REPLAY OBSERVER</span><span>{runState.stage === "configure" ? "AWAITING RUN" : `${String(Math.min(runState.visibleTraceSteps, presentation.trace.length)).padStart(2, "0")} / ${String(presentation.trace.length).padStart(2, "0")} EVENTS`}</span></div>
+            <div className="console-header"><span>REPLAY CLOCK / PRESENTATION TIMING · NOT CHAIN LATENCY</span><span>{runState.stage === "configure" ? "AWAITING RUN" : `${String(Math.min(runState.visibleTraceSteps, presentation.trace.length)).padStart(2, "0")} / ${String(presentation.trace.length).padStart(2, "0")} EVENTS`}</span></div>
             {runState.stage === "configure" ? (
               <div className="trace-empty">
                 <div className="trace-empty-glyph" aria-hidden="true"><span /><span /><span /><span /></div>
@@ -242,7 +230,7 @@ export default function App() {
                 {runState.stage === "running" && <li className="trace-cursor"><span /> Replaying recorded evidence…</li>}
               </ol>
             )}
-            <div className="console-footer"><span>INTENT <code>{abbreviate(evidence.intent.intentId, 12, 8)}</code></span><span>RECEIPT FINALITY <b>INCLUDED</b></span></div>
+            {runState.stage !== "configure" && <div className="console-footer"><span>INTENT <code>{abbreviate(evidence.intent.intentId, 12, 8)}</code></span><span>RECEIPT FINALITY <b>INCLUDED</b></span></div>}
           </div>
 
           {runState.stage !== "configure" && (
@@ -287,68 +275,7 @@ export default function App() {
         </section>
       </section>
 
-      {isComplete && (
-        <>
-          <section className={`verdict-section ${verdictFailed ? "verdict-fail" : "verdict-pass"}`} aria-labelledby="verdict-title">
-            <div className="verdict-lead">
-              <div className="section-kicker"><span>03</span> ECONOMIC VERDICT</div>
-              <div className="verdict-word">{evidence.verdict}</div>
-              <h2 id="verdict-title">ECONOMIC INTENT<br />{verdictFailed ? "NOT PRESERVED" : "PRESERVED"}</h2>
-              <p>{verdictFailed ? "Both transactions succeeded. The economic intent failed." : fixture === "fixed" && scenario === "timeout-after-settlement" ? "The retry carried the same intent. The second transfer was prevented." : "Observed execution preserved the stated economic intent."}</p>
-            </div>
-            <div className="invariant-area">
-              <div className="invariant-heading"><span>INVARIANT EVALUATION</span><span>{evidence.invariantResults.filter((item) => item.passed).length} / {evidence.invariantResults.length} PRESERVED</span></div>
-              <div className="invariant-list">
-                {evidence.invariantResults.map((item) => (
-                  <article key={item.name} className={`invariant-row ${item.passed ? "invariant-pass" : "invariant-fail"}`}>
-                    <span className="invariant-state" aria-label={item.passed ? "Preserved" : "Violated"}>{item.passed ? "✓" : "×"}</span>
-                    <div className="invariant-name"><strong>{item.name}</strong><small>{invariantDescriptions[item.name] ?? item.message ?? "Economic invariant."}</small></div>
-                    <div className="invariant-values"><span>EXPECTED <b>{item.name === "Recipient amount" ? `${formatUsdc6(evidence.qualificationAmountUsdc6)} USDC` : item.expected}</b></span><span>OBSERVED <b>{item.name === "Recipient amount" ? `${formatUsdc6(evidence.observedSettlementAmountUsdc6)} USDC` : item.observed}</b></span></div>
-                    <span className="invariant-result">{item.passed ? "PRESERVED" : "VIOLATED"}</span>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <section className="proof-section" aria-labelledby="proof-title">
-            <div className="proof-heading">
-              <div><div className="section-kicker"><span>04</span> ECONOMIC CORROBORATION</div><h2 id="proof-title">PROVE THE OUTCOME.</h2></div>
-              <div className="corroboration-badge"><span>✓</span> RECEIPT = EVENT = BALANCE MOVEMENT</div>
-            </div>
-            <div className="proof-grid">
-              <article className="proof-cell"><div className="proof-cell-top"><span className="proof-number">A</span><span className="proof-check">✓ VERIFIED</span></div><h3>TRANSACTION RECEIPTS</h3><strong>{successReceipts} SUCCESS<span>{revertedReceipts > 0 ? ` · ${revertedReceipts} REVERTED` : ""}</span></strong><p>Successful chain execution is recorded independently of Sazume's economic verdict.</p></article>
-              <article className="proof-cell"><div className="proof-cell-top"><span className="proof-number">B</span><span className="proof-check">✓ VERIFIED</span></div><h3>SETTLEMENT EVENTS</h3><strong>{matchingEvents} MATCHING<span> / {evidence.settlementAttempts} ATTEMPTS</span></strong><p>Intent, payer, recipient, and USDC6 amounts match the observed settlement records.</p></article>
-              <article className="proof-cell proof-balance"><div className="proof-cell-top"><span className="proof-number">C</span><span className="proof-check">✓ VERIFIED</span></div><h3>RECIPIENT BALANCE DELTA</h3><strong>+{formatUsdc6(evidence.recipientDeltaUsdc6)}<span> USDC</span></strong><p>{formatUsdc6(evidence.recipientBalanceBeforeUsdc6)} before <span className="arrow-inline">→</span> {formatUsdc6(evidence.recipientBalanceAfterUsdc6)} after</p></article>
-            </div>
-
-            <div className="evidence-meta">
-              <div className="evidence-meta-cell"><span>INTENT / SAME ON RETRY</span><div><CopyValue value={evidence.intent.intentId} label="intent ID" /></div></div>
-              <div className="evidence-meta-cell"><span>SETTLEMENT CONTRACT</span><div><CopyValue value={evidence.contract} label="settlement contract address" /></div></div>
-              <div className="evidence-meta-cell"><span>QUALIFICATION AMOUNT</span><strong>{formatUsdc6(evidence.qualificationAmountUsdc6)} USDC <small>({evidence.qualificationAmountUsdc6} USDC6)</small></strong></div>
-              <div className="evidence-meta-cell"><span>RECIPIENT</span><div><CopyValue value={evidence.recipientAddress} label="recipient address" /></div></div>
-            </div>
-
-            <div className="transaction-table-wrap">
-              <div className="transaction-table-heading"><h3>VERIFIED TRANSACTIONS</h3><span>{evidence.transactions.length} TX · ARC TESTNET</span></div>
-              <div className="transaction-table" role="table" aria-label="Verified Arc Testnet transactions">
-                <div className="transaction-head" role="row"><span>TRANSACTION</span><span>RECEIPT</span><span>BLOCK</span><span>GAS USED</span><span>EFFECTIVE PRICE</span><span>GAS COST</span></div>
-                {evidence.transactions.map((tx, index) => (
-                  <div className="transaction-row" role="row" key={tx.hash}>
-                    <div className="transaction-hash" role="cell"><a href={`https://explorer.testnet.arc.io/tx/${tx.hash}`} target="_blank" rel="noreferrer" aria-label={`Open transaction ${tx.hash} in Arc Testnet explorer`}>{abbreviate(tx.hash, 10, 8)} <span aria-hidden="true">↗</span></a><CopyValue value={tx.hash} label={`transaction ${index + 1} hash`} /></div>
-                    <span className={`tx-status ${tx.status}`} role="cell"><i />{tx.status.toUpperCase()}</span>
-                    <span className="mono-cell" role="cell">{tx.blockNumber}</span>
-                    <span className="mono-cell" role="cell">{Number(tx.gasUsed).toLocaleString("en-US")}</span>
-                    <span className="mono-cell" role="cell">{formatGwei(tx.effectiveGasPrice)}</span>
-                    <span className="mono-cell gas-cost" role="cell">{formatUsdc6(tx.gasCostUsdc6)} <small>USDC</small></span>
-                  </div>
-                ))}
-              </div>
-              <p className="transaction-footnote">Gas is reported in native USDC18 and normalized to USDC6 for display. The raw native18 values remain in the verified run records.</p>
-            </div>
-          </section>
-        </>
-      )}
+      {isComplete && <><EconomicVerdict evidence={evidence} /><ProofInspector evidence={evidence} /></>}
 
       {isComplete && <details className="qualification-disclosure"><summary>VALIDATION / QUALIFICATION MATRIX</summary><section className="matrix-section" aria-labelledby="matrix-title">
         <div className="matrix-heading"><div><div className="section-kicker"><span>05</span> QUALIFICATION RECORD</div><h2 id="matrix-title">THE BEHAVIORAL MATRIX</h2></div><span>LIVE ARC TESTNET · VERIFIED EVIDENCE</span></div>
