@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "product": "Sazume",
+  "surface": "apps/web",
+  "direction": "Monochrome conformance folio for economic reliability testing",
+  "principles": [
+    "Judge economic intent against observed movement, not receipt status alone",
+    "Progressively disclose configuration, execution, reconciliation, verdict, then proof",
+    "Keep the same economic intent visible across transaction retries",
+    "Use typography, symbols, borders, spacing, and inversion for status without hue",
+    "Label replayed Arc Testnet evidence truthfully and never imply Mainnet execution"
+  ],
+  "colors": {
+    "black": "#050505",
+    "nearBlack": "#101010",
+    "white": "#f5f5f5",
+    "paper": "#fff",
+    "gray1": "#dedede",
+    "gray2": "#b4b4b4",
+    "gray3": "#8a8a8a",
+    "gray4": "#666",
+    "rule": "#393939",
+    "ruleSoft": "#252525",
+    "semanticStatus": {
+      "success": "white text/symbol on black or neutral surface",
+      "violation": "black text/symbol on white inverted verdict surface",
+      "warning": "neutral text with ! symbol and structural emphasis",
+      "selection": "white text with white underline/rule"
+    }
+  },
+  "typography": {
+    "display": "Liberation Sans Narrow, Arial Narrow, Nimbus Sans Narrow, sans-serif",
+    "body": "Cantarell, Segoe UI, sans-serif",
+    "mono": "SFMono-Regular, Consolas, Liberation Mono, monospace",
+    "usage": {
+      "display": "Editorial thesis, section headings, intent, verdict",
+      "body": "Explanatory copy and readable controls",
+      "mono": "Labels, trace, intent identifiers, values, transaction and gas metadata"
+    }
+  },
+  "layout": {
+    "shellMaxWidth": "1424px",
+    "shellGutters": {
+      "default": "52px",
+      "atOrBelow1100px": "32px",
+      "atOrBelow820px": "22px",
+      "atOrBelow540px": "15px"
+    },
+    "breakpoints": [
+      1100,
+      820,
+      540
+    ],
+    "minimumDocumentWidth": "320px",
+    "composition": "Centered ruled folio; editorial thesis; obligation specification; implementation and fault controls; progressive execution timeline; intent-to-receipt branches; reconciliation; inverted verdict; post-verdict proof; editorial explanation; collapsed qualification record"
+  },
+  "interaction": {
+    "stages": [
+      "configure",
+      "running",
+      "analyzing",
+      "complete"
+    ],
+    "implementations": [
+      "unsafe",
+      "fixed"
+    ],
+    "scenarios": [
+      "normal",
+      "timeout-before-settlement",
+      "timeout-after-settlement",
+      "duplicate-callback"
+    ],
+    "selection": "Semantic buttons with aria-pressed within labeled fieldsets",
+    "reset": "Available after a run starts; implementation/scenario change resets replay state",
+    "timing": "Deterministic presentation pacing, explicitly not historical chain latency"
+  },
+  "patterns": {
+    "hero": "Four-line display thesis with compact product purpose and Arc Testnet verified-evidence label",
+    "experiment": "Open typographic/rule-based specification and controls, no card wrapper",
+    "trace": "Numbered timeline with presentation timestamp, state symbol, label, detail, and optional evidence status",
+    "intentVisualization": "One intent branches to receipt rows and recombines at recipient balance delta/invariant outcome",
+    "verdict": "White/black inversion for violation; near-black/white for preserved intent",
+    "proof": "Post-completion receipt, event, and recipient balance corroboration with transaction details",
+    "qualification": "Native details/summary disclosure below primary experience"
+  },
+  "accessibility": {
+    "focus": "Visible 2px white focus outline with 4px offset for controls and links",
+    "contrast": "Achromatic high-contrast foreground/background pairs",
+    "stateCommunication": "Symbols and text accompany monochrome treatment",
+    "liveRegions": "Polite trace/reconciliation status and completion announcement",
+    "reducedMotion": "prefers-reduced-motion disables smooth scrolling and minimizes animation/transition duration",
+    "responsive": "Single-column narrative at tablet/mobile widths; identifiers wrap or truncate within controls"
+  },
+  "evidence": {
+    "source": "evidence/testnet/ via testnetEvidenceProvider",
+    "mode": "Verified Arc Testnet evidence replay",
+    "browserRpc": false,
+    "browserBroadcast": false,
+    "mainnetClaim": false,
+    "displayedEvidence": [
+      "transaction receipt status",
+      "matching IntentSettled events",
+      "recipient USDC6 balance delta",
+      "intent and contract identity",
+      "block and gas fields",
+      "Arc Testnet explorer links"
+    ]
+  }
+}

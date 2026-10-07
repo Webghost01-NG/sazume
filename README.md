@@ -12,6 +12,8 @@ The React + TypeScript interface lives in [`apps/web`](apps/web). It starts in a
 
 This is a **verified evidence replay**, not a live execution. The browser does not call an RPC or broadcast transactions. Evidence records are validated and loaded through the presentation provider; the UI derives the trace, invariant display, transaction links, and verdict from those records. Receipt status, matching settlement events, recipient balance movement, and invariant verdict remain distinct so successful transactions can visibly coexist with an economic failure. The qualification matrix is available below the experiment after it completes.
 
+The interface uses a monochrome conformance-folio design. Configure, execution, reconciliation, verdict, and proof are revealed in sequence; the initial view contains no completed outcome or transaction details. Captured desktop, mobile, and replay-state QA images are in [`.impeccable/review`](.impeccable/review), and the implemented visual system is recorded in [`DESIGN.md`](DESIGN.md).
+
 The demonstrated qualification amount is **0.010000 USDC** (`10,000` USDC6). The CLI narrative uses a conceptual **1 USDC** obligation; it is not the amount used in the Testnet qualification. The replay's transaction and contract links are drawn from the public records in [`evidence/testnet`](evidence/testnet/).
 
 Verified Arc Testnet fixtures:
