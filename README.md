@@ -41,6 +41,28 @@ npm run test:contracts:arc
 npm run demo:arc-foundry-local
 ```
 
+## Developer CLI quickstart
+
+Sazume's local CLI runs the same `EconomicIntent`, four canonical scenarios, runner, and invariant implementations used by the existing demos. It needs no RPC, wallet, private key, or network access:
+
+```bash
+npm install
+npm run sazume -- test --adapter unsafe
+npm run sazume -- test --adapter idempotent
+npm run sazume -- test --adapter unsafe --scenario timeout-after-settlement
+npm run --silent sazume -- test --adapter idempotent --json
+```
+
+The unsafe full matrix exits non-zero because observed settlement and fulfillment state violates invariants. The idempotent matrix exits zero. `--json` emits machine-readable results with bigint values encoded as decimal strings, and preserves the same exit status for CI. `--trace` includes deterministic scenario events. Scenario IDs are `normal`, `timeout-before-settlement`, `timeout-after-settlement`, and `duplicate-callback`.
+
+To connect an application, implement the chain-independent [`EconomicAdapter`](packages/core/src/adapter.ts), define an intent with `defineIntent` and reusable invariants, then export a `sazume.config.ts` containing `{ intent, adapter, scenarios }`. The complete small example is [`examples/paid-report`](examples/paid-report): its `PaidReportAdapter` stands in for the application's payment/fulfillment calls and reports observed state. Run it with:
+
+```bash
+npm run sazume -- test --config examples/paid-report/sazume.config.ts
+```
+
+Replace that example adapter with your own application integration. The runner resets it before each scenario, observes the outcome, and evaluates the intent's invariants; the CLI only selects the configuration, presents the core results, and maps the overall verdict to an exit code. `--scenario <id>` can select one canonical failure scenario for a configured adapter. `--init` is intentionally not provided in v0.1; the example config is the scaffold.
+
 `npm run dev` starts the static evidence replay UI at the Vite local URL. `npm run build` creates the deployable static bundle in `dist/`. The frontend uses the same recorded Sazume results and evidence; it does not reimplement the economic invariants in React.
 
 `test:contracts` uses local Foundry with a mock ERC-20. `demo:arc-local` deploys the Solidity fixtures to ordinary Anvil (chain ID 31337) and runs the shared scenarios through the receipt/log observer. This is local EVM execution, **not Arc Foundry, an Arc fork, or evidence of Arc network execution**. See [Arc assumptions](docs/arc-assumptions.md).
