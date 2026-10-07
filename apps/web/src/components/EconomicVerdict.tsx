@@ -14,7 +14,7 @@ export function EconomicVerdict({ evidence }: { evidence: RunEvidence }) {
       : "The observed execution preserved the stated economic intent.";
 
   return (
-    <section className={`verdict-section ${failed ? "verdict-fail" : "verdict-pass"}`} aria-labelledby="verdict-title">
+    <section id="verdict-section" className={`verdict-section ${failed ? "verdict-fail" : "verdict-pass"}`} aria-labelledby="verdict-title">
       <div className="verdict-lead">
         <div className="section-kicker"><span>03</span> ECONOMIC VERDICT</div>
         <div className="verdict-word">{evidence.verdict}</div>

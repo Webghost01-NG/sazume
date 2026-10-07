@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
-import matrixEvidence from "../../../evidence/testnet/full-matrix.json";
 import {
   abbreviate,
   formatUsdc6,
@@ -26,7 +25,7 @@ const scenarioLabels: Record<ScenarioKey, string> = {
   "duplicate-callback": "DUPLICATE CALLBACK",
 };
 
-const fixtureResults = matrixEvidence.outcomes as Array<{ fixture: Fixture; scenario: ScenarioKey; result: "PASS" | "FAIL" }>;
+const fixtureResults = testnetEvidenceProvider.loadMatrix().outcomes;
 
 function CopyValue({ value, label, className = "" }: { value: string; label: string; className?: string }) {
   const [copied, setCopied] = useState(false);
@@ -89,6 +88,15 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, [runState.stage, runState.visibleAnalysisSteps]);
 
+  useEffect(() => {
+    if (runState.stage !== "complete") return;
+    const target = document.getElementById("verdict-section");
+    if (target && typeof target.scrollIntoView === "function") {
+      const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      target.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+    }
+  }, [runState.stage]);
+
   function resetReplay() {
     dispatch({ type: "reset" });
   }
@@ -133,7 +141,7 @@ export default function App() {
       <section className="hero" id="top">
         <div className="hero-copy">
           <p className="eyebrow"><span>01</span> ECONOMIC RELIABILITY / PAYMENT WORKFLOWS</p>
-          <h1>THE TRANSACTION<br />SUCCEEDED.<br /><span>DID THE MONEY?</span></h1>
+          <h1>THE TRANSACTION SUCCEEDED.<br /><span>DID THE MONEY?</span></h1>
           <p className="hero-subtitle">Economic reliability testing<br />for programmable money.</p>
         </div>
         <div className="hero-instrument" aria-label="Replay metadata">
@@ -147,7 +155,7 @@ export default function App() {
       <div className="replay-banner">
         <span className="replay-icon" aria-hidden="true">↻</span>
         <span><strong>VERIFIED EVIDENCE REPLAY.</strong> Replaying a previously verified Arc Testnet execution. No transaction is broadcast from this browser.</span>
-        <span className="replay-ref">ARC TESTNET · 5042002</span>
+        <span className="replay-ref">{evidence.network.toUpperCase()} · {evidence.chainId}</span>
       </div>
 
       <section className="workbench" aria-label="Sazume reliability experiment">
@@ -160,8 +168,9 @@ export default function App() {
             <div className="intent-value-row">
               <div><span>OBLIGATION</span><strong>{formatUsdc6(evidence.qualificationAmountUsdc6)} <small>USDC</small></strong></div>
               <div><span>MAX SETTLEMENTS</span><strong>{evidence.invariantResults.find((item) => item.name === "Settlement uniqueness")?.expected ?? "≤ 1"}</strong></div>
+              <div><span>MAX FULFILLMENTS</span><strong>{evidence.invariantResults.find((item) => item.name === "Fulfillment uniqueness")?.expected ?? "≤ 1"}</strong></div>
             </div>
-            {runState.stage === "configure" ? <p className="intent-human-id">VERIFIED QUALIFICATION · 0.010000 USDC</p> : <div className="intent-id-row"><span>SAME ECONOMIC INTENT</span><CopyValue value={evidence.intent.intentId} label="economic intent ID" /></div>}
+            {runState.stage === "configure" ? <p className="intent-human-id">VERIFIED QUALIFICATION · {formatUsdc6(evidence.qualificationAmountUsdc6)} USDC</p> : <div className="intent-id-row"><span>SAME ECONOMIC INTENT</span><CopyValue value={evidence.intent.intentId} label="economic intent ID" /></div>}
           </section>
 
           <section className="fixture-block" aria-labelledby="fixture-title">
@@ -278,13 +287,13 @@ export default function App() {
       {isComplete && <><EconomicVerdict evidence={evidence} /><ProofInspector evidence={evidence} /></>}
 
       {isComplete && <details className="qualification-disclosure"><summary>VALIDATION / QUALIFICATION MATRIX</summary><section className="matrix-section" aria-labelledby="matrix-title">
-        <div className="matrix-heading"><div><div className="section-kicker"><span>05</span> QUALIFICATION RECORD</div><h2 id="matrix-title">THE BEHAVIORAL MATRIX</h2></div><span>LIVE ARC TESTNET · VERIFIED EVIDENCE</span></div>
+        <div className="matrix-heading"><div><div className="section-kicker"><span>05</span> QUALIFICATION RECORD</div><h2 id="matrix-title">THE BEHAVIORAL MATRIX</h2></div><span>ARC TESTNET · VERIFIED RUN RECORDS</span></div>
         <div className="matrix-table" role="table" aria-label="Arc Testnet qualification matrix">
-          <div className="matrix-row matrix-head" role="row"><span>SCENARIO</span><span>UNSAFE</span><span>FIXED</span></div>
+          <div className="matrix-row matrix-head" role="row"><span>SCENARIO</span><span>UNSAFE</span><span>IDEMPOTENT</span></div>
           {scenarios.map((item) => {
             const unsafe = fixtureResults.find((row) => row.fixture === "unsafe" && row.scenario === item.id)?.result;
             const fixed = fixtureResults.find((row) => row.fixture === "fixed" && row.scenario === item.id)?.result;
-            return <div className={`matrix-row ${scenario === item.id ? "matrix-current" : ""}`} role="row" key={item.id}><span>{item.title}</span><span className={unsafe === "PASS" ? "matrix-pass" : "matrix-fail"}><i>{unsafe === "PASS" ? "✓" : "×"}</i> {unsafe}</span><span className="matrix-pass"><i>✓</i> {fixed}</span></div>;
+            return <div className={`matrix-row ${scenario === item.id ? "matrix-current" : ""}`} role="row" key={item.id}><span>{item.title}</span><span className={unsafe === "PASS" ? "matrix-pass" : "matrix-fail"}><i>{unsafe === "PASS" ? "✓" : "×"}</i> {unsafe}</span><span className={fixed === "PASS" ? "matrix-pass" : "matrix-fail"}><i>{fixed === "PASS" ? "✓" : "×"}</i> {fixed}</span></div>;
           })}
         </div>
       </section></details>}

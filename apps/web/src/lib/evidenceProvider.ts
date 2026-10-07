@@ -1,3 +1,5 @@
+import matrixRecord from "../../../../evidence/testnet/full-matrix.json";
+
 export interface RunEvidence {
   network: string;
   chainId: number;
@@ -59,12 +61,16 @@ export interface RunEvidence {
 
 export type Fixture = "unsafe" | "fixed";
 export type ScenarioKey = "normal" | "timeout-before-settlement" | "timeout-after-settlement" | "duplicate-callback";
+export interface QualificationOutcome { fixture: Fixture; scenario: ScenarioKey; result: "PASS" | "FAIL" }
+export interface QualificationMatrix { network: string; chainId: number; outcomes: QualificationOutcome[] }
 
 export interface EvidenceProvider {
   readonly networkLabel: string;
   loadRun(fixture: Fixture, scenario: ScenarioKey): RunEvidence;
+  loadMatrix(): QualificationMatrix;
 }
 
+const matrixRecordTyped = matrixRecord as QualificationMatrix;
 const evidenceFiles = import.meta.glob<RunEvidence>("../../../../evidence/testnet/*/run.json", {
   eager: true,
   import: "default",
@@ -77,22 +83,38 @@ const scenarioDirectories: Record<ScenarioKey, (fixture: Fixture) => string> = {
   "duplicate-callback": (fixture) => `duplicate-callback-${fixture}`,
 };
 
-export const testnetEvidenceProvider: EvidenceProvider = {
-  networkLabel: "ARC TESTNET",
-  loadRun(fixture, scenario) {
-    const directory = scenarioDirectories[scenario](fixture);
-    const entry = Object.entries(evidenceFiles).find(([path]) => path.endsWith(`/${directory}/run.json`));
-    if (!entry) throw new Error(`Verified Testnet evidence is missing: ${directory}/run.json`);
-    const evidence = entry[1];
-    if (evidence.network !== "arc-testnet" || evidence.chainId !== 5_042_002) {
-      throw new Error(`Evidence network mismatch in ${directory}/run.json`);
-    }
-    if (!evidence.receiptEventBalanceAgreement || evidence.inconsistency.length > 0) {
-      throw new Error(`Economic evidence is not corroborated in ${directory}/run.json`);
-    }
-    return evidence;
-  },
-};
+export function createVerifiedReplayProvider(
+  runs: Record<string, RunEvidence>,
+  matrix: QualificationMatrix,
+): EvidenceProvider {
+  return {
+    networkLabel: "ARC TESTNET",
+    loadMatrix() {
+      if (matrix.network !== "arc-testnet" || matrix.chainId !== 5_042_002 || matrix.outcomes.length !== 8) {
+        throw new Error("Arc Testnet qualification matrix failed its network or completeness check.");
+      }
+      return matrix;
+    },
+    loadRun(fixture, scenario) {
+      const directory = scenarioDirectories[scenario](fixture);
+      const evidence = runs[directory];
+      if (!evidence) throw new Error(`Verified Testnet evidence is missing: ${directory}/run.json`);
+      if (evidence.network !== "arc-testnet" || evidence.chainId !== 5_042_002) {
+        throw new Error(`Evidence network mismatch in ${directory}/run.json`);
+      }
+      if (!evidence.receiptEventBalanceAgreement || evidence.inconsistency.length > 0) {
+        throw new Error(`Economic evidence is not corroborated in ${directory}/run.json`);
+      }
+      return evidence;
+    },
+  };
+}
+
+const runsByDirectory = Object.fromEntries(
+  Object.entries(evidenceFiles).map(([path, evidence]) => [path.split("/").at(-2) ?? "", evidence]),
+);
+
+export const testnetEvidenceProvider = createVerifiedReplayProvider(runsByDirectory, matrixRecordTyped);
 
 export function formatUsdc6(value: string | bigint): string {
   const amount = typeof value === "bigint" ? value : BigInt(value);

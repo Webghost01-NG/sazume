@@ -8,7 +8,9 @@ Sazume tests programmable-money applications against their intended economic out
 
 ## Product interface
 
-The React + TypeScript interface lives in [`apps/web`](apps/web). It replays accepted Arc Testnet evidence for the four validated scenarios against the unsafe and idempotent fixtures. The browser does not call an RPC or broadcast transactions. Receipt status, matching settlement events, recipient balance movement, and invariant verdict are presented separately so successful transactions can visibly coexist with an economic failure.
+The React + TypeScript interface lives in [`apps/web`](apps/web). It starts in a configuration state, then progressively replays one selected experiment through execution, economic reconciliation, verdict, and proof inspection. The default experiment is **Unsafe / Timeout After Settlement**: both blockchain receipts succeed, then the economic invariant fails. Switching to **Idempotent** replays the corresponding preserved outcome.
+
+This is a **verified evidence replay**, not a live execution. The browser does not call an RPC or broadcast transactions. Evidence records are validated and loaded through the presentation provider; the UI derives the trace, invariant display, transaction links, and verdict from those records. Receipt status, matching settlement events, recipient balance movement, and invariant verdict remain distinct so successful transactions can visibly coexist with an economic failure. The qualification matrix is available below the experiment after it completes.
 
 The demonstrated qualification amount is **0.010000 USDC** (`10,000` USDC6). The CLI narrative uses a conceptual **1 USDC** obligation; it is not the amount used in the Testnet qualification. The replay's transaction and contract links are drawn from the public records in [`evidence/testnet`](evidence/testnet/).
 
