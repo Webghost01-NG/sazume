@@ -20,7 +20,8 @@ describe("Sazume evidence replay interface", () => {
 
     expect(screen.getAllByText(/ARC TESTNET/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/VERIFIED EVIDENCE REPLAY/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/No transaction is broadcast from this browser/)).toBeTruthy();
+    expect(screen.getByText(/previously executed Arc Testnet run/)).toBeTruthy();
+    expect(screen.getByText(/No new transaction is broadcast from this browser/)).toBeTruthy();
     expect(screen.queryByText(/Arc Mainnet verified/i)).toBeNull();
   });
 
@@ -49,7 +50,7 @@ describe("Sazume evidence replay interface", () => {
     expect(screen.getAllByText("SUCCESS").length).toBeGreaterThanOrEqual(2);
     expect(screen.getAllByText(/0\.020000/).length).toBeGreaterThan(0);
     expect(screen.getByText(/SAME ECONOMIC INTENT/i)).toBeTruthy();
-    expect(screen.getAllByRole("link", { name: /OPEN IN ARC EXPLORER/i })).toHaveLength(2);
+    expect(screen.getAllByRole("link", { name: /VIEW ORIGINAL TESTNET TRANSACTION/i })).toHaveLength(2);
   });
 
   it("clears the prior verdict when switching implementation and replays fixed evidence", async () => {

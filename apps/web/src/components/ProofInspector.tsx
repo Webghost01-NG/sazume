@@ -56,7 +56,7 @@ export function ProofInspector({ evidence }: { evidence: RunEvidence }) {
                 <span className={`tx-status ${transaction.status}`}><i /> TX {String(index + 1).padStart(2, "0")} · {transaction.status.toUpperCase()}</span>
                 <div className="transaction-actions">
                   <CopyEvidence value={transaction.hash} label={`transaction ${index + 1} hash`} />
-                  <a href={`https://explorer.testnet.arc.io/tx/${transaction.hash}`} target="_blank" rel="noreferrer">OPEN IN ARC EXPLORER ↗</a>
+                  <a href={`https://explorer.testnet.arc.io/tx/${transaction.hash}`} target="_blank" rel="noreferrer">VIEW ORIGINAL TESTNET TRANSACTION ↗</a>
                 </div>
               </div>
               <div className="transaction-hash-full"><code>{transaction.hash}</code></div>

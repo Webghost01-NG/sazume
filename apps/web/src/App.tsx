@@ -242,7 +242,7 @@ export default function App() {
             <span>{isActive ? "RUNNING" : isComplete ? "REPLAY TEST" : "RUN ECONOMIC TEST"}</span><span aria-hidden="true">→</span>
           </button>
           {runState.stage !== "configure" && <button className="reset-button" type="button" onClick={resetReplay}>RESET EXPERIMENT</button>}
-          <span className="run-mode-copy">VERIFIED EVIDENCE REPLAY<br />No transaction is broadcast from this browser.</span>
+          <span className="run-mode-copy">VERIFIED EVIDENCE REPLAY<br />This replays a previously executed Arc Testnet run. No new transaction is broadcast from this browser.</span>
         </div>
       </section>
 
