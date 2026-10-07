@@ -38,6 +38,7 @@ function parseArgs(args: string[]): Options {
     } else throw new Error(`Unknown option: ${arg}`);
   }
   if (options.adapter && !["unsafe", "idempotent"].includes(options.adapter)) throw new Error(`Unknown adapter "${options.adapter}". Choose unsafe or idempotent.`);
+  if (options.adapter && options.config) throw new Error("Choose either --adapter or --config, not both.");
   if (options.scenario && !Object.hasOwn(scenarioFactories, options.scenario)) throw new Error(`Unknown scenario "${options.scenario}". Choose: ${Object.keys(scenarioFactories).join(", ")}.`);
   return options;
 }
