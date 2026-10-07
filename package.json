@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": ["packages/cli"],
   "scripts": {
     "test": "vitest run",
     "demo": "tsx demo/run.ts",
@@ -10,6 +11,7 @@
     "dev": "vite --config apps/web/vite.config.ts",
     "build": "vite build --config apps/web/vite.config.ts",
     "preview": "vite preview --config apps/web/vite.config.ts",
+    "sazume": "tsx packages/cli/src/index.ts",
     "test:contracts": "forge test --root contracts",
     "test:contracts:arc": "arc-forge test --root contracts",
     "demo:arc-local": "forge build --root contracts && tsx packages/arc/src/demo-local.ts",
