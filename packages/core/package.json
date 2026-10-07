@@ -1,0 +1,39 @@
+{
+  "name": "@sazume/core",
+  "version": "0.1.0-rc.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "description": "Economic intent, scenario, adapter, observation and invariant primitives for Sazume.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Webghost01-NG/sazume.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://sazume.vercel.app/docs",
+  "keywords": ["economic reliability", "payments", "invariants", "testing"],
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "files": ["dist", "README.md"],
+  "sideEffects": false,
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/esm/index.d.ts",
+        "default": "./dist/esm/index.js"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.ts",
+        "default": "./dist/cjs/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && node scripts/mark-cjs.mjs",
+    "build": "npm run build:esm && npm run build:cjs",
+    "prepack": "npm run build"
+  }
+}

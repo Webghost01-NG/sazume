@@ -1,18 +1,17 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
-import { defineIntent, fulfillmentUniqueness, recipientAmount, sazume, settlementUniqueness, completionConsistency } from "../../core/src/index.js";
-import type { EconomicInvariant } from "../../core/src/invariant.js";
-import type { Scenario } from "../../core/src/scenario.js";
-import { normal } from "../../../scenarios/normal.js";
-import { timeoutBeforeSettlement } from "../../../scenarios/timeout-before-settlement.js";
-import { timeoutAfterSettlement } from "../../../scenarios/timeout-after-settlement.js";
-import { duplicateCallback } from "../../../scenarios/duplicate-callback.js";
-import { FixedAdapter } from "../../../demo/fixed-adapter.js";
-import { UnsafeAdapter } from "../../../demo/unsafe-adapter.js";
+import { defineIntent, fulfillmentUniqueness, recipientAmount, sazume, settlementUniqueness, completionConsistency } from "@sazume/core";
+import type { EconomicInvariant, Scenario } from "@sazume/core";
+import { normal } from "./scenarios/normal.js";
+import { timeoutBeforeSettlement } from "./scenarios/timeout-before-settlement.js";
+import { timeoutAfterSettlement } from "./scenarios/timeout-after-settlement.js";
+import { duplicateCallback } from "./scenarios/duplicate-callback.js";
+import { FixedAdapter } from "./reference/fixed-adapter.js";
+import { UnsafeAdapter } from "./reference/unsafe-adapter.js";
 import type { SazumeConfig } from "./config.js";
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.0-rc.1";
 const scenarioFactories: Record<string, () => Scenario> = {
   normal,
   "timeout-before-settlement": timeoutBeforeSettlement,
@@ -20,13 +19,17 @@ const scenarioFactories: Record<string, () => Scenario> = {
   "duplicate-callback": duplicateCallback,
 };
 
-interface Options { adapter?: string; scenario?: string; json: boolean; trace: boolean; config?: string }
+interface Options { adapter?: string; scenario?: string; json: boolean; trace: boolean; config?: string; help?: boolean }
+
+const USAGE = `Sazume economic reliability testing\n\nUsage:\n  sazume test [options]\n  sazume --help\n\nOptions:\n  --adapter <unsafe|idempotent>  Run a bundled reference adapter\n  --scenario <id>                Run one canonical scenario\n  --config <path>                Load a trusted local ESM/CommonJS config\n  --trace                        Print deterministic scenario trace events\n  --json                         Print the versioned JSON report only\n  --help                         Show this help\n\nScenario IDs: ${Object.keys(scenarioFactories).join(", ")}\n\nConfigs execute as local code. Only load files you trust.`;
 
 function parseArgs(args: string[]): Options {
-  if (args[0] !== "test") throw new Error("Usage: sazume test [--adapter unsafe|idempotent] [--scenario ID] [--json] [--trace] [--config PATH]");
+  if (args.length === 0 || args[0] === "--help" || args[0] === "-h") return { json: false, trace: false, help: true };
+  if (args[0] !== "test") throw new Error("Expected the `test` command. Run `sazume --help` for usage.");
   const options: Options = { json: false, trace: false };
   for (let i = 1; i < args.length; i += 1) {
     const arg = args[i];
+    if (arg === "--help" || arg === "-h") return { ...options, help: true };
     if (arg === "--json") options.json = true;
     else if (arg === "--trace") options.trace = true;
     else if (arg === "--adapter" || arg === "--scenario" || arg === "--config") {
@@ -57,12 +60,13 @@ function referenceConfig(adapterName: "unsafe" | "idempotent", selectedScenario?
 }
 
 async function loadConfig(path?: string): Promise<SazumeConfig> {
-  const configPath = resolve(process.cwd(), path ?? "sazume.config.ts");
+  const configPath = resolve(process.cwd(), path ?? "sazume.config.mjs");
+  if (!/\.(?:mjs|cjs|js)$/.test(configPath)) throw new Error("Config must be executable JavaScript (.mjs, .js, or .cjs). Compile TypeScript config files first.");
   let loaded: { default?: SazumeConfig; config?: SazumeConfig };
   try {
     loaded = await import(pathToFileURL(configPath).href) as typeof loaded;
   } catch (error) {
-    throw new Error(`Could not load ${configPath}: ${error instanceof Error ? error.message : String(error)}. Create sazume.config.ts or pass --adapter unsafe|idempotent.`);
+    throw new Error(`Could not load ${configPath}: ${error instanceof Error ? error.message : String(error)}. Create sazume.config.mjs or pass --adapter unsafe|idempotent.`);
   }
   const config = loaded.default ?? loaded.config;
   if (!config || !config.intent || !config.adapter || !Array.isArray(config.scenarios)) throw new Error("Config must default-export { intent, adapter, scenarios }.");
@@ -105,10 +109,17 @@ function jsonSafe(value: unknown): unknown {
   return JSON.parse(JSON.stringify(value, (_key, entry) => typeof entry === "bigint" ? entry.toString() : entry));
 }
 
-async function main(): Promise<void> {
+async function main(argv = process.argv.slice(2)): Promise<void> {
   let options: Options;
-  try { options = parseArgs(process.argv.slice(2)); }
-  catch (error) { process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`); process.exitCode = 2; return; }
+  try { options = parseArgs(argv); }
+  catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (argv.includes("--json")) process.stdout.write(`${JSON.stringify({ schemaVersion: 1, version: VERSION, error: { code: "USAGE_ERROR", message } })}\n`);
+    else process.stderr.write(`${message}\n`);
+    process.exitCode = 2;
+    return;
+  }
+  if (options.help) { process.stdout.write(`${USAGE}\n`); process.exitCode = 0; return; }
   try {
     let config: SazumeConfig;
     let adapterName: string;
@@ -124,15 +135,15 @@ async function main(): Promise<void> {
     const result = await sazume.run(config);
     if (options.json) {
       const scenarios = result.scenarios.map(({ scenario, outcome, invariants, trace, passed }) => ({ scenario, verdict: passed ? "PASS" : "FAIL", passed, outcome, invariants, trace }));
-      process.stdout.write(`${JSON.stringify(jsonSafe({ version: VERSION, adapter: adapterName, intent: result.intent, scenarios, outcomes: scenarios.map(({ scenario, outcome }) => ({ scenario, ...outcome })), verdict: result.passed ? "PASS" : "FAIL", summary: { passed: scenarios.filter((item) => item.passed).length, failed: scenarios.filter((item) => !item.passed).length } }), null, 2)}\n`);
+      process.stdout.write(`${JSON.stringify(jsonSafe({ schemaVersion: 1, version: VERSION, adapter: adapterName, intent: result.intent, scenarios, outcomes: scenarios.map(({ scenario, outcome }) => ({ scenario, ...outcome })), verdict: result.passed ? "PASS" : "FAIL", summary: { passed: scenarios.filter((item) => item.passed).length, failed: scenarios.filter((item) => !item.passed).length } }), null, 2)}\n`);
     } else process.stdout.write(`${renderText(result, adapterName, options.trace)}\n`);
     process.exitCode = result.passed ? 0 : 1;
   } catch (error) {
-    process.stderr.write(`Sazume test failed: ${error instanceof Error ? error.message : String(error)}\n`);
+    const message = error instanceof Error ? error.message : String(error);
+    if (options.json) process.stdout.write(`${JSON.stringify({ schemaVersion: 1, version: VERSION, error: { code: "EXECUTION_ERROR", message } })}\n`);
+    else process.stderr.write(`Sazume test failed: ${message}\n`);
     process.exitCode = 1;
   }
 }
-
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) await main();
 
 export { main, parseArgs, referenceConfig };

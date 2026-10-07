@@ -42,7 +42,10 @@ describe("Sazume CLI executable behavior", () => {
     expect(() => JSON.parse(output.stdout)).not.toThrow();
     expect(output.stdout.startsWith("{")).toBe(true);
     expect(output.stderr).toBe("");
-    const missingConfig = invoke("test", "--config", "does-not-exist.ts");
+    const unsupportedConfig = invoke("test", "--config", "does-not-exist.ts");
+    expect(unsupportedConfig.status).toBe(1);
+    expect(unsupportedConfig.stderr).toContain("Compile TypeScript config files first");
+    const missingConfig = invoke("test", "--config", "does-not-exist.mjs");
     expect(missingConfig.status).toBe(1);
     expect(missingConfig.stderr).toContain("Could not load");
     const conflict = invoke("test", "--adapter", "unsafe", "--config", "sazume.config.ts");
@@ -51,7 +54,7 @@ describe("Sazume CLI executable behavior", () => {
   });
 
   it("runs an external application config and selected canonical scenario", () => {
-    const result = invoke("test", "--config", "examples/paid-report/sazume.config.ts", "--scenario", "timeout-after-settlement", "--trace");
+    const result = invoke("test", "--config", "examples/paid-report/sazume.config.mjs", "--scenario", "timeout-after-settlement", "--trace");
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("PaidReportAdapter");
     expect(result.stdout).toContain("retry");
@@ -61,5 +64,17 @@ describe("Sazume CLI executable behavior", () => {
     const result = invoke("test", "--adapter", "idempotent", "--scenario", "normal");
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("1 / 1 scenarios passed");
+  });
+
+  it("prints help and emits structured JSON for usage and config errors", () => {
+    const help = invoke("--help");
+    expect(help.status).toBe(0);
+    expect(help.stdout).toContain("trusted local ESM/CommonJS config");
+    const usage = invoke("bad-command", "--json");
+    expect(usage.status).toBe(2);
+    expect(JSON.parse(usage.stdout).error.code).toBe("USAGE_ERROR");
+    const config = invoke("test", "--config", "does-not-exist.mjs", "--json");
+    expect(config.status).toBe(1);
+    expect(JSON.parse(config.stdout).error.code).toBe("EXECUTION_ERROR");
   });
 });

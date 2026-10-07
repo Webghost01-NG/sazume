@@ -1,4 +1,4 @@
-import type { ScenarioContext } from "../packages/core/src/scenario.js";
+import type { ScenarioContext } from "@sazume/core";
 
 export async function settle(context: ScenarioContext): Promise<void> {
   context.trace.add("settlement-attempt", context.intent.intentId);

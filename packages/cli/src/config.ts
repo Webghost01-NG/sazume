@@ -1,6 +1,4 @@
-import type { EconomicAdapter } from "../../core/src/adapter.js";
-import type { EconomicIntent } from "../../core/src/intent.js";
-import type { Scenario } from "../../core/src/scenario.js";
+import type { EconomicAdapter, EconomicIntent, Scenario } from "@sazume/core";
 
 export interface SazumeConfig {
   intent: EconomicIntent;

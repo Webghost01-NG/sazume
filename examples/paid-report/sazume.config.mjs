@@ -1,8 +1,7 @@
-import { defineIntent, settlementUniqueness, recipientAmount, fulfillmentUniqueness, completionConsistency } from "../../packages/core/src/index.js";
-import { defineConfig } from "../../packages/cli/src/config.js";
-import { normal } from "../../scenarios/normal.js";
-import { timeoutAfterSettlement } from "../../scenarios/timeout-after-settlement.js";
-import { PaidReportAdapter } from "./adapter.js";
+import { defineIntent, settlementUniqueness, recipientAmount, fulfillmentUniqueness, completionConsistency } from "@sazume/core";
+import { defineConfig } from "@sazume/cli/config";
+import { normal, timeoutAfterSettlement } from "@sazume/cli/scenarios";
+import { PaidReportAdapter } from "./adapter.mjs";
 
 const intent = defineIntent({
   id: "PAID-REPORT-42",
