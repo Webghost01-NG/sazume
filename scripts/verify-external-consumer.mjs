@@ -14,10 +14,44 @@ const consumer = join(temp, "consumer");
 await (await import("node:fs/promises")).mkdir(coreTarballDir, { recursive: true });
 await (await import("node:fs/promises")).mkdir(consumer, { recursive: true });
 
-execFileSync(npm, ["pack", "--workspace", "@sazume/core", "--pack-destination", coreTarballDir], { cwd: root, stdio: "ignore" });
-execFileSync(npm, ["pack", "--workspace", "@sazume/cli", "--pack-destination", coreTarballDir], { cwd: root, stdio: "ignore" });
-const coreTarball = join(coreTarballDir, "sazume-core-0.1.0-rc.1.tgz");
-const cliTarball = join(coreTarballDir, "sazume-cli-0.1.0-rc.1.tgz");
+execFileSync(npm, ["run", "build:packages"], { cwd: root, stdio: "ignore" });
+
+const coreManifest = JSON.parse(await readFile(join(root, "packages/core/package.json"), "utf8"));
+const cliManifest = JSON.parse(await readFile(join(root, "packages/cli/package.json"), "utf8"));
+assert.equal(coreManifest.version, cliManifest.version, "public packages must use the same prerelease version");
+assert.equal(cliManifest.dependencies["@sazume/core"], coreManifest.version, "CLI must depend on the matching core release");
+for (const manifest of [coreManifest, cliManifest]) {
+  assert.equal(manifest.private, true, "candidate packages stay protected from accidental publication");
+  assert.equal(manifest.license, "UNLICENSED", "a license must not be applied without approval");
+  assert.equal(manifest.engines.node, ">=20.19.0");
+  assert.deepEqual(manifest.publishConfig, { access: "public", tag: "next", registry: "https://registry.npmjs.org/" });
+}
+
+function packInfo(workspace) {
+  const output = execFileSync(npm, ["pack", `--workspace=${workspace}`, "--dry-run", "--json", "--ignore-scripts"], { cwd: root, encoding: "utf8" });
+  const [info] = JSON.parse(output);
+  assert.equal(info.name, workspace);
+  assert.equal(info.version, coreManifest.version);
+  const paths = info.files.map(({ path }) => path);
+  assert.ok(paths.includes("package.json"));
+  assert.ok(paths.includes("README.md"));
+  assert.ok(paths.every((path) => !/(^|\/)(?:\.env(?:\.|$)|evidence|node_modules|contracts|\.git)(\/|$)/i.test(path)), `${workspace} tarball must exclude secrets, private evidence, dependencies, contracts, and git files`);
+  assert.ok(paths.every((path) => workspace === "@sazume/core"
+    ? ["README.md", "package.json"].includes(path) || path.startsWith("dist/")
+    : ["README.md", "package.json", "bin/sazume.js"].includes(path) || path.startsWith("dist/")), `${workspace} tarball contains an unreviewed path`);
+  return { info, paths };
+}
+
+const corePack = packInfo("@sazume/core");
+const cliPack = packInfo("@sazume/cli");
+for (const target of ["dist/esm/index.js", "dist/esm/index.d.ts", "dist/cjs/index.js", "dist/cjs/index.d.ts"]) assert.ok(corePack.paths.includes(target), `core tarball must contain ${target}`);
+for (const target of ["bin/sazume.js", "dist/index.js", "dist/index.d.ts", "dist/config.js", "dist/config.d.ts", "dist/scenarios/index.js", "dist/scenarios/index.d.ts"]) assert.ok(cliPack.paths.includes(target), `CLI tarball must contain ${target}`);
+assert.ok((cliPack.info.files.find(({ path }) => path === "bin/sazume.js")?.mode ?? 0) & 0o111, "CLI bin must be executable in its tarball");
+
+const corePackResult = JSON.parse(execFileSync(npm, ["pack", "--workspace=@sazume/core", "--pack-destination", coreTarballDir, "--json", "--ignore-scripts"], { cwd: root, encoding: "utf8" }))[0];
+const cliPackResult = JSON.parse(execFileSync(npm, ["pack", "--workspace=@sazume/cli", "--pack-destination", coreTarballDir, "--json", "--ignore-scripts"], { cwd: root, encoding: "utf8" }))[0];
+const coreTarball = join(coreTarballDir, corePackResult.filename);
+const cliTarball = join(coreTarballDir, cliPackResult.filename);
 
 await writeFile(join(consumer, "package.json"), JSON.stringify({ name: "external-sazume-consumer", private: true, type: "module" }, null, 2));
 execFileSync(npm, ["install", "--offline", "--no-audit", coreTarball, cliTarball], { cwd: consumer, stdio: "ignore" });
@@ -81,9 +115,16 @@ assert.equal(cli.stderr, "");
 const json = JSON.parse(cli.stdout);
 assert.deepEqual(json.scenarios.map((item) => item.verdict), ["PASS", "PASS", "FAIL", "FAIL"]);
 assert.equal(json.scenarios[2].outcome.settlement.count, 2);
+assert.equal(json.version, coreManifest.version, "CLI report version must come from packaged metadata");
+const unsafeCli = spawnSync(cliPath, ["test", "--adapter", "unsafe", "--json"], { cwd: consumer, encoding: "utf8" });
+assert.equal(unsafeCli.status, 1, unsafeCli.stderr);
+assert.deepEqual(JSON.parse(unsafeCli.stdout).scenarios.map(({ verdict }) => verdict), ["PASS", "PASS", "FAIL", "FAIL"]);
+const fixedCli = spawnSync(cliPath, ["test", "--adapter", "idempotent", "--json"], { cwd: consumer, encoding: "utf8" });
+assert.equal(fixedCli.status, 0, fixedCli.stderr);
+assert.deepEqual(JSON.parse(fixedCli.stdout).scenarios.map(({ verdict }) => verdict), ["PASS", "PASS", "PASS", "PASS"]);
 
 const tsc = resolve(root, "node_modules/.bin/tsc");
 execFileSync(process.execPath, [tsc, "--noEmit", "--strict", "--target", "ES2022", "--module", "NodeNext", "--moduleResolution", "NodeNext", "types.mts", "types.cts"], { cwd: consumer, stdio: "ignore" });
 const pkgCore = JSON.parse(await readFile(join(consumer, "node_modules/@sazume/core/package.json"), "utf8"));
 const pkgCli = JSON.parse(await readFile(join(consumer, "node_modules/@sazume/cli/package.json"), "utf8"));
-console.log(JSON.stringify({ externalInstall: "pass", esmImport: "pass", commonJsRequire: "pass", publicDeclarations: "pass", packagedCli: "pass", cliMatrix: json.scenarios.map((item) => [item.scenario, item.verdict]), packageNames: [pkgCore.name, pkgCli.name], tempProject: consumer }, null, 2));
+console.log(JSON.stringify({ externalInstall: "pass", esmImport: "pass", commonJsRequire: "pass", publicDeclarations: "pass", packagedCli: "pass", customAdapterConfig: "pass", unsafeExitCode: unsafeCli.status, idempotentExitCode: fixedCli.status, packageFileAllowlist: "pass", cliMatrix: json.scenarios.map((item) => [item.scenario, item.verdict]), packageNames: [pkgCore.name, pkgCli.name], tempProject: consumer }, null, 2));

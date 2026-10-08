@@ -12,6 +12,11 @@
   },
   "homepage": "https://sazume.vercel.app/docs",
   "keywords": ["economic reliability", "payments", "testing", "programmable money"],
+  "publishConfig": {
+    "access": "public",
+    "tag": "next",
+    "registry": "https://registry.npmjs.org/"
+  },
   "engines": {
     "node": ">=20.19.0"
   },
