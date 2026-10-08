@@ -18,12 +18,18 @@ Apache-2.0 is a reasonable recommendation for a developer framework where an exp
 ## Public source repository
 
 - [x] Current reachable Git history scanned for common credential patterns and secret-bearing filenames; no pattern hits were found.
-- [ ] Remove or replace the personal Gmail author identity in Git history before public exposure. Existing commit objects contain it in every commit; preserving current history means it will be exposed by a public clone.
-- [ ] Review commit identities, testnet evidence, environment examples, and operational notes as public content.
-- [ ] Confirm a license and public-ready default branch.
-- [x] Explicit approval for public visibility was received on 2026-10-08; visibility change is paused because current commit history contains the maintainer's personal Gmail address.
+- [x] Repository visibility is public and `main` is the GitHub default branch (2026-10-08).
+- [x] Main branch requires CI checks; force pushes are disabled.
+- [x] GitHub secret scanning and push protection are enabled; no open alerts were returned at the latest check.
+- [x] Review commit identities, Testnet evidence, environment examples, and operational notes as public content. Existing commit metadata includes the maintainer's personal Gmail address; history was intentionally preserved. Use the GitHub noreply address for future commits. No secret values were found by the project scan.
+- [ ] Approve and apply an open-source license. Current package manifests remain `UNLICENSED`.
 
-The repository may be viewed publicly without an open-source license, but absent a license, visitors do not receive standard permission to reuse or redistribute the source. The commit identity issue is the immediate privacy blocker.
+The repository may be viewed publicly without an open-source license, but absent a license, visitors do not receive standard permission to reuse or redistribute the source. The commit email remains a privacy consideration; it was deliberately preserved rather than rewriting existing history.
+
+## Vercel production tracking
+
+- [ ] Vercel is connected to `Webghost01-NG/sazume`, but its Production Branch still reads `feat/arc-solidity-observer`. The `main` merge created a Preview deployment; the `sazume.vercel.app` production alias still needs the Vercel Project Settings → Environments → Production → Branch Tracking value changed to `main` and saved.
+- [x] The public homepage and `/docs` return HTTP 200. A successful Preview deployment is not evidence that production tracks `main`.
 
 ## Arc Microgrants
 
