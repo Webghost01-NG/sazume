@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFile } from "node:fs/promises";
 import { defineIntent } from "../packages/core/src/intent.js";
 import { ArcObserver } from "../packages/arc/src/observer.js";
 import { native18ToUsdc6 } from "../packages/arc/src/normalization.js";
@@ -9,6 +10,8 @@ import { ArcEconomicAdapter } from "../packages/arc/src/adapter.js";
 import { arcConfigFromEnv } from "../packages/arc/src/config.js";
 import { arcChain } from "../packages/arc/src/client.js";
 import { assertArcMainnetWritePlan, type ArcMainnetWritePlan } from "../packages/arc/src/preflight.js";
+import { ARC_MAINNET_GAS_LIMITS, calculateArcMainnetBudget } from "../packages/arc/src/mainnet-budget.js";
+import { ARC_MAINNET_READ_RPC_ENDPOINTS, assertArcMainnetReadChainId, assertOfficialArcMainnetReadEndpoint } from "../packages/arc/src/mainnet-readonly-guards.js";
 
 const payer = "0x00000000000000000000000000000000000000aa" as const;
 const recipient = "0x00000000000000000000000000000000000000bb" as const;
@@ -223,5 +226,51 @@ describe("Arc Mainnet spend preflight", () => {
     expect(() => assertArcMainnetWritePlan({ ...plan, gasExposureNative18: 0n })).toThrow("positive estimate");
     expect(() => assertArcMainnetWritePlan({ ...plan, maximumTotalExposureNative18: 92_829_519_999_999_999n })).toThrow("Total Mainnet exposure exceeds");
     expect(() => assertArcMainnetWritePlan({ ...plan, principalUsdc6: 1n << 256n })).toThrow("uint256 bigint");
+  });
+});
+
+describe("Arc Mainnet qualification budget", () => {
+  it("bounds the exact eight-transaction plan using explicit gas and fee caps", () => {
+    const budget = calculateArcMainnetBudget();
+    expect(budget.transactionCount).toBe(8);
+    expect(budget.gasLimitTotal).toBe(2_600_000n);
+    expect(budget.maxFeePerGasWei).toBe(40_000_000_000n);
+    expect(budget.maximumGasCostNative18).toBe(104_000_000_000_000_000n);
+    expect(budget.maximumGasCostUsdc6).toBe(104_000n);
+    expect(budget.principalUsdc6).toBe(30_000n);
+    expect(budget.qualificationAmountUsdc6).toBe(10_000n);
+    expect(budget.unsafeAllowanceUsdc6).toBe(20_000n);
+    expect(budget.idempotentAllowanceUsdc6).toBe(10_000n);
+    expect(budget.maximumTotalExposureUsdc6).toBe(134_000n);
+    expect(budget.recommendedWalletFloorUsdc6).toBe(150_000n);
+    expect(budget.headroomAboveCapUsdc6).toBe(16_000n);
+  });
+
+  it("allocates gas caps for both deployments, two approvals, and four settlement attempts", () => {
+    expect(Object.keys(ARC_MAINNET_GAS_LIMITS)).toEqual([
+      "unsafeDeployment", "idempotentDeployment", "unsafeApproval", "idempotentApproval",
+      "unsafeSettlementFirst", "unsafeSettlementRetry", "idempotentSettlementFirst", "idempotentDuplicateRevert",
+    ]);
+  });
+});
+
+describe("Arc Mainnet read-only preflight guards", () => {
+  it("allows only exact official provider URLs and rejects query-string variants", () => {
+    for (const endpoint of ARC_MAINNET_READ_RPC_ENDPOINTS) expect(() => assertOfficialArcMainnetReadEndpoint(endpoint)).not.toThrow();
+    expect(() => assertOfficialArcMainnetReadEndpoint("https://rpc.mainnet.arc.io/?x=1")).toThrow("exact");
+    expect(() => assertOfficialArcMainnetReadEndpoint("https://unknown.example/rpc")).toThrow("exact");
+  });
+
+  it("stops read-only planning on any chain other than Arc Mainnet", () => {
+    expect(() => assertArcMainnetReadChainId(5_042)).not.toThrow();
+    expect(() => assertArcMainnetReadChainId(5_042_002)).toThrow("expected 5042");
+    expect(() => assertArcMainnetReadChainId(1)).toThrow("expected 5042");
+  });
+
+  it("keeps the Mainnet preflight free of signer, signing, and transaction-submission code", async () => {
+    const source = await readFile(new URL("../packages/arc/src/mainnet-readonly-preflight.ts", import.meta.url), "utf8");
+    expect(source).toMatch(/\.getChainId\(\)/);
+    expect(source).toMatch(/\.estimateGas\(/);
+    expect(source).not.toMatch(/createWalletClient|privateKeyToAccount|signTransaction|sendTransaction|writeContract|sendRawTransaction/);
   });
 });
