@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { pathToFileURL } from "node:url";
 import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
 import { defineIntent, fulfillmentUniqueness, recipientAmount, sazume, settlementUniqueness, completionConsistency } from "@sazume/core";
 import type { EconomicInvariant, Scenario } from "@sazume/core";
 import { normal } from "./scenarios/normal.js";
@@ -11,7 +12,8 @@ import { FixedAdapter } from "./reference/fixed-adapter.js";
 import { UnsafeAdapter } from "./reference/unsafe-adapter.js";
 import type { SazumeConfig } from "./config.js";
 
-const VERSION = "0.1.0-rc.1";
+const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as { version: string };
+const VERSION = packageMetadata.version;
 const scenarioFactories: Record<string, () => Scenario> = {
   normal,
   "timeout-before-settlement": timeoutBeforeSettlement,
