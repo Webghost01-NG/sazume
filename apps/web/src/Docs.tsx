@@ -41,20 +41,23 @@ function Introduction() {
 
 function GettingStarted() {
   return <>
-    <p className="docs-lede">The official packages are prepared as MIT-licensed release candidates but are not published to npm yet. In a Sazume source checkout, install dependencies and build the local packages first. No RPC, wallet, or key is used.</p>
-    <Code>{`npm ci
-npm pack --workspace=@sazume/core
-npm pack --workspace=@sazume/cli`}</Code>
-    <p>Those commands create the two versioned tarballs in the checkout. Install both tarballs into a consumer project with <code>npm install /path/to/sazume-core-0.1.0-rc.1.tgz /path/to/sazume-cli-0.1.0-rc.1.tgz</code>. npm installation commands will be added after the public release has been verified.</p>
-    <Code>{`npm run sazume -- test --adapter unsafe
-npm run sazume -- test --adapter idempotent`}</Code>
+    <p className="docs-lede">Install Sazume’s public 0.1.0 release candidates from npm. Use the explicit <code>@next</code> tag while these prereleases are current.</p>
+    <p><a href="https://www.npmjs.com/package/@sazume/core">@sazume/core on npm</a> · <a href="https://www.npmjs.com/package/@sazume/cli">@sazume/cli on npm</a></p>
+    <Code>{`npm install @sazume/core@next
+npm install --save-dev @sazume/cli@next`}</Code>
+    <p>The CLI installs its exact matching core dependency. Install core directly as well when your configuration imports intent and invariant functions from it. These bundled reference tests run locally and do not use an RPC, wallet, key, or Mainnet.</p>
+    <Code>{`npx sazume test --adapter unsafe
+npx sazume test --adapter idempotent`}</Code>
     <h2>Read the result</h2>
     <p>The unsafe adapter exits non-zero because the observed outcome violates settlement and fulfillment uniqueness in two scenarios. The idempotent adapter exits zero because the same scenarios leave the obligation settled and fulfilled once.</p>
     <Code>{`UNSAFE:    PASS, PASS, FAIL, FAIL
 IDEMPOTENT: PASS, PASS, PASS, PASS`}</Code>
     <p>Use a single canonical scenario while developing an adapter:</p>
-    <Code>{`npm run sazume -- test --adapter unsafe \\
+    <Code>{`npx sazume test --adapter unsafe \\
   --scenario timeout-after-settlement --trace`}</Code>
+    <h2>Use your application</h2>
+    <p>Create <code>sazume.config.mjs</code> with an <code>EconomicIntent</code>, your <code>EconomicAdapter</code>, and the scenarios to run. See the <a href="https://www.npmjs.com/package/@sazume/cli">CLI package README</a> for a complete executable adapter example and method contract.</p>
+    <Code>{`npx sazume test --config ./sazume.config.mjs --json`}</Code>
   </>;
 }
 
@@ -71,9 +74,10 @@ function Concepts() {
 function Cli() {
   return <>
     <p className="docs-lede">The CLI loads an application configuration, calls the existing runner, and maps the derived result to readable or machine output.</p>
-    <Code>{`sazume test --config ./sazume.config.mjs
-sazume test --scenario timeout-after-settlement --trace
-sazume test --config ./sazume.config.mjs --json`}</Code>
+    <Code>{`npx sazume test --config ./sazume.config.mjs
+npx sazume test --scenario timeout-after-settlement --trace
+npx sazume test --config ./sazume.config.mjs --json`}</Code>
+    <p>Install <a href="https://www.npmjs.com/package/@sazume/core">the core</a> and <a href="https://www.npmjs.com/package/@sazume/cli">the CLI</a> using their <code>@next</code> prerelease tags. The CLI reads <code>sazume.config.mjs</code> by default.</p>
     <h2>Configuration</h2><p>JavaScript config files are executable trusted local code. Export <code>{`{ intent, adapter, scenarios }`}</code> as the default export or named <code>config</code>. TypeScript config must be compiled to JavaScript before loading; the CLI does not install a runtime transpiler.</p>
     <h2>Trace and JSON</h2><p><code>--trace</code> prints deterministic trace entries. <code>--json</code> writes only versioned JSON to stdout; bigint values are decimal strings. Errors also produce a JSON error object when JSON mode is requested.</p>
     <h2>Exit codes</h2><p><code>0</code> means every selected scenario passed. <code>1</code> means an invariant failed or execution could not be trusted. <code>2</code> means invalid CLI usage or an unsupported option.</p>
@@ -124,7 +128,7 @@ function Reference() {
     <h2>Unsafe settlement</h2><p>The fixture accepts repeated settlement calls for an intent. On the offchain model, observed state naturally reaches two settlements after a lost acknowledgement and retry.</p>
     <h2>Idempotent settlement</h2><p>The fixture prevents a second economic transfer for an already settled intent. The Arc Solidity fixture reverts the duplicate call; reverted execution consumes gas onchain but is not counted as a settlement.</p>
     <h2>Trust model</h2><p>Sazume can only evaluate the state its adapter can observe. On Arc qualification, the observer corroborates receipt status, matching events, and recipient ERC-20 balance delta; disagreement is surfaced as an observer inconsistency.</p>
-    <h2>Known limitations</h2><p>The package names are reserved for the upcoming public release candidate and have not been published yet. Adapter quality and completeness remain the integrator's responsibility. The current scenario set is deliberately small and deterministic. No Mainnet evidence exists.</p>
+    <h2>Known limitations</h2><p>The public npm packages are prerelease version <code>0.1.0-rc.1</code> and currently use the <code>next</code> tag. Adapter quality and completeness remain the integrator's responsibility. The current scenario set is deliberately small and deterministic. No Mainnet evidence exists.</p>
   </>;
 }
 
