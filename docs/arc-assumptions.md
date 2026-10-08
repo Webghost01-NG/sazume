@@ -1,6 +1,6 @@
 # Arc assumptions verified for this spike
 
-**Checked:** 2026-10-08 against current official Arc documentation and one read-only Mainnet RPC provider. Parameters can change.
+**Checked:** 2026-10-08 against current official Arc documentation and four read-only Mainnet RPC providers. Parameters can change.
 
 ## Network and tooling
 
@@ -9,7 +9,7 @@
 | Arc mainnet | `5042` | `https://rpc.mainnet.arc.io` | `https://explorer.arc.io` |
 | Arc testnet | `5042002` | `https://rpc.testnet.arc.io` | `https://explorer.testnet.arc.io` |
 
-On 2026-10-08, the Circle documentation still listed Mainnet chain ID `5042`, USDC contract `0x3600000000000000000000000000000000000000`, and 6 ERC-20 decimals. The canonical `rpc.mainnet.arc.io` returned HTTP 403 from this execution environment. The Arc-listed Blockdaemon endpoint returned chain ID `5042`, USDC decimals `6`, and a latest block with a `20_000_000_000` wei base fee; it is a point-in-time observation, not a fee guarantee. Mainnet values and gas assumptions are expanded in `docs/mainnet-preflight.md`.
+On 2026-10-08, current Circle documentation listed Mainnet chain ID `5042`, USDC contract `0x3600000000000000000000000000000000000000`, and 6 ERC-20 decimals. The earlier HTTP 403 from the canonical endpoint was transient; at the latest check, Circle, Blockdaemon, dRPC, and QuickNode all allowed unauthenticated read-only calls and agreed on the chain ID, 6 decimals, and 20 Gwei base fee. Mainnet values and gas assumptions are expanded in `docs/mainnet-preflight.md`.
 
 Arc documents **Arc Foundry**, a Circle fork with `arc-forge`, `arc-cast`, and `arc-anvil`, because ordinary Foundry does not encode all Arc protocol differences. The official instructions install release binaries. Standard `forge`/`anvil` used by `npm run test:contracts` and `npm run demo:arc-local` are used only for Solidity/local EVM simulation. That demo prints its chain ID and does not claim Arc runtime equivalence.
 
@@ -24,7 +24,7 @@ Circle's official docs direct developers to the Circle Faucet for testnet USDC. 
 - An ERC-20 USDC transfer emits a 6-decimal log from the ERC-20 contract and an 18-decimal system `Transfer` log. Arc warns indexers to distinguish emitters to avoid counting one movement twice.
 - `native18ToUsdc6` divides by `10^12` using integer arithmetic and truncates any remainder below one USDC6 unit. It never rounds up. Settlement intents/contracts continue to use USDC6 unchanged.
 - Arc denominates gas in USDC native18 units. Receipt gas cost is `gasUsed * effectiveGasPrice`; this remains diagnostic and is not an invariant input.
-- Arc gas docs document a 20 Gwei minimum base fee for Testnet, a 20,000 Gwei maximum base fee, and an EIP-1559 + EWMA fee market. Do not treat the Testnet minimum as a verified Mainnet minimum. The testnet adapter applies the 20 Gwei `maxFeePerGas` floor only when configured with chain ID `5042002`.
+- Arc documents EIP-1559 with EWMA fee smoothing, a 20,000 Gwei maximum base fee, and a 20 Gwei `maxFeePerGas` mempool floor. The fee reference labels the minimum-base-fee parameter specifically as Testnet. The testnet adapter applies the 20 Gwei fee floor only with chain ID `5042002`; the proposed Mainnet preflight cap is 40 Gwei and aborts above it.
 
 ## Finality and receipts
 
