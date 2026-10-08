@@ -14,7 +14,9 @@ describe("first-party documentation surface", () => {
     render(<Docs />);
     expect(screen.getByRole("heading", { name: "Installation & quickstart" })).toBeTruthy();
     expect(screen.getByRole("navigation", { name: "Documentation" }).querySelectorAll("a")).toHaveLength(7);
-    expect(screen.getByText(/No RPC, wallet, or key is used/)).toBeTruthy();
+    expect(screen.getByText(/bundled reference tests run locally and do not use an RPC, wallet, key, or Mainnet/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "@sazume/core on npm" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "@sazume/cli on npm" })).toBeTruthy();
   });
 
   it("truthfully describes verified Arc Testnet evidence and Mainnet status", () => {
