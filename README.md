@@ -2,6 +2,9 @@
 
 ## The transaction succeeded. Did the money?
 
+[![core version](https://img.shields.io/npm/v/%40sazume%2Fcore/next?label=%40sazume%2Fcore%40next)](https://www.npmjs.com/package/@sazume/core)
+[![CLI version](https://img.shields.io/npm/v/%40sazume%2Fcli/next?label=%40sazume%2Fcli%40next)](https://www.npmjs.com/package/@sazume/cli)
+
 Sazume tests whether programmable-money applications preserve one economic obligation under retries, timeouts, and duplicate execution. Two successful transactions can still mean one customer paid twice; Sazume evaluates the observed economic outcome, not receipt status alone.
 
 **Economic reliability testing for programmable money.** [Open the verified replay](https://sazume.vercel.app) · [Read the docs](https://sazume.vercel.app/docs)
@@ -16,23 +19,28 @@ The bundled scenarios are normal execution, timeout before settlement, timeout a
 
 ## Quickstart
 
-The npm packages are **not published**. Use a source checkout for now:
+Install the public prerelease packages from the `next` dist-tag:
 
 ```bash
-git clone https://github.com/Webghost01-NG/sazume.git
-cd sazume
-npm ci
-npm run sazume -- test --adapter unsafe
+npm install @sazume/core@next
+npm install --save-dev @sazume/cli@next
+npx sazume test --adapter unsafe
 ```
 
-The unsafe adapter exits `1` because the observed state violates economic invariants. Compare the idempotent implementation:
+The unsafe reference intentionally exits `1` when the economic invariants fail. Compare the idempotent implementation, which should exit `0`:
 
 ```bash
-npm run sazume -- test --adapter idempotent
-npm run --silent sazume -- test --adapter idempotent --json
+npx sazume test --adapter idempotent
 ```
 
-Exit `0` means all selected scenarios pass; `1` means an economic or execution failure; `2` means invalid CLI usage. `--trace` prints deterministic events. Ordinary tests use no RPC, wallet, private key, or Mainnet credentials.
+The same CLI can load a custom application adapter from `sazume.config.mjs`:
+
+```bash
+npx sazume test --config ./sazume.config.mjs
+npx sazume test --config ./sazume.config.mjs --json
+```
+
+Exit `0` means all selected invariants pass; `1` means an invariant or execution failed; `2` means invalid CLI usage. `--trace` prints deterministic events. The bundled adapters use no RPC, wallet, private key, or Mainnet credentials.
 
 Unsafe result:
 
@@ -71,7 +79,7 @@ npm run test:contracts
 npm run demo:arc-local
 ```
 
-The release candidates `@sazume/core` and `@sazume/cli` are prepared at `0.1.0-rc.1` under the MIT license, with `webghost01` verified as the owner of the `sazume` npm organization. The versions are not published yet, so npm installation is not available. Use the source-checkout quickstart above until the release is announced. See [npm release readiness](docs/release-readiness.md) for the remaining publication gates.
+`@sazume/core@0.1.0-rc.1` and `@sazume/cli@0.1.0-rc.1` are published under the `next` dist-tag with the MIT license. Install with the explicit `@next` tag during this prerelease; the npm `latest` tag remains the temporary `0.0.0-stage` placeholder. The core and CLI READMEs document the public APIs, adapter contract, scenarios, JSON output, and CI exit codes.
 
 ## Docs
 
