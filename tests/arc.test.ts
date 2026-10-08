@@ -8,6 +8,7 @@ import { intentSettledEvent } from "../packages/arc/src/observer.js";
 import { ArcEconomicAdapter } from "../packages/arc/src/adapter.js";
 import { arcConfigFromEnv } from "../packages/arc/src/config.js";
 import { arcChain } from "../packages/arc/src/client.js";
+import { assertArcMainnetWritePlan, type ArcMainnetWritePlan } from "../packages/arc/src/preflight.js";
 
 const payer = "0x00000000000000000000000000000000000000aa" as const;
 const recipient = "0x00000000000000000000000000000000000000bb" as const;
@@ -157,5 +158,67 @@ describe("ArcEconomicAdapter boundary", () => {
     });
     await expect(mismatchedTestnetAdapter.settle(intent)).rejects.toThrow("Arc Testnet chain guard rejected RPC chain ID 5042; expected 5042002");
     expect(sendCount).toBe(0);
+  });
+
+  it("rejects an absent signer before fee estimation or transaction submission", async () => {
+    let estimatedFees = 0;
+    let sendCount = 0;
+    const adapter = new ArcEconomicAdapter({
+      publicClient: {
+        chain: { id: 5_042_002 },
+        getChainId: async () => 5_042_002,
+        estimateFeesPerGas: async () => { estimatedFees += 1; return { maxFeePerGas: 20n, maxPriorityFeePerGas: 1n }; },
+      } as never,
+      walletClient: { chain: { id: 5_042_002 }, sendTransaction: async () => { sendCount += 1; return `0x${"c".repeat(64)}`; } } as never,
+      contractAddress: contract,
+      payerFor: () => payer,
+      recipientFor: () => recipient,
+      idempotentFulfillment: true,
+      fromBlock: 0n,
+      resetForScenario: async () => ({ contractAddress: contract, fromBlock: 0n }),
+    });
+    await expect(adapter.settle(intent)).rejects.toThrow("Arc settlement requires an explicitly configured signer");
+    expect(estimatedFees).toBe(0);
+    expect(sendCount).toBe(0);
+  });
+});
+
+describe("Arc Mainnet spend preflight", () => {
+  const plan: ArcMainnetWritePlan = {
+    explicitOptIn: true,
+    actualChainId: 5_042,
+    rpcUrl: "https://rpc.mainnet.arc.io",
+    approvedRpcUrl: "https://rpc.mainnet.arc.io",
+    selectedSignerAddress: payer,
+    approvedSignerAddress: payer,
+    plannedTransactions: 8,
+    maximumTransactions: 8,
+    principalUsdc6: 30_000n,
+    maximumPrincipalUsdc6: 30_000n,
+    gasExposureNative18: 62_829_520_000_000_000n,
+    maximumGasExposureNative18: 62_829_520_000_000_000n,
+    maximumTotalExposureNative18: 92_829_520_000_000_000n,
+  };
+
+  it("accepts a bounded, explicitly approved plan without signing or broadcasting", () => {
+    expect(() => assertArcMainnetWritePlan(plan)).not.toThrow();
+  });
+
+  it("rejects missing opt-in, wrong chain, and unapproved RPC endpoints", () => {
+    expect(() => assertArcMainnetWritePlan({ ...plan, explicitOptIn: false })).toThrow("explicit opt-in");
+    expect(() => assertArcMainnetWritePlan({ ...plan, actualChainId: 5_042_002 })).toThrow("expected chain ID 5042");
+    expect(() => assertArcMainnetWritePlan({ ...plan, rpcUrl: "https://rpc.testnet.arc.io" })).toThrow("does not match");
+  });
+
+  it("rejects a missing or different signer", () => {
+    expect(() => assertArcMainnetWritePlan({ ...plan, selectedSignerAddress: undefined })).toThrow("explicitly selected signer");
+    expect(() => assertArcMainnetWritePlan({ ...plan, approvedSignerAddress: "0x0000000000000000000000000000000000000001" })).toThrow("does not match");
+  });
+
+  it("rejects transaction count, principal, gas, and combined exposure overruns", () => {
+    expect(() => assertArcMainnetWritePlan({ ...plan, plannedTransactions: 9 })).toThrow("transaction count exceeds");
+    expect(() => assertArcMainnetWritePlan({ ...plan, principalUsdc6: 30_001n })).toThrow("principal exceeds");
+    expect(() => assertArcMainnetWritePlan({ ...plan, gasExposureNative18: plan.maximumGasExposureNative18 + 1n })).toThrow("gas exposure exceeds");
+    expect(() => assertArcMainnetWritePlan({ ...plan, maximumTotalExposureNative18: 92_829_519_999_999_999n })).toThrow("Total Mainnet exposure exceeds");
   });
 });

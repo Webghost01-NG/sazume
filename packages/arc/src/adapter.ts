@@ -30,6 +30,9 @@ export class ArcEconomicAdapter implements EconomicAdapter {
 
   async settle(intent: EconomicIntent): Promise<SettlementResult> {
     await this.assertArcExecutionChain();
+    if (!this.options.walletClient.account) {
+      throw new Error("Arc settlement requires an explicitly configured signer; no transaction was submitted");
+    }
     const payer = this.options.payerFor(intent);
     const recipient = this.options.recipientFor(intent);
     const data = encodeFunctionData({ abi: settleAbi, functionName: "settle", args: [`0x${intent.intentId}`, recipient, intent.payment.amount] });
