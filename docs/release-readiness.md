@@ -8,12 +8,29 @@ Status checked 2026-10-08. This checklist records prerequisites; it does not aut
 - [x] CLI executable works from an installed tarball.
 - [x] Independent consumer imports public exports without monorepo aliases.
 - [x] JSON output, deterministic scenarios, exit codes, and no-network CI behavior validated.
-- [ ] Confirm npm organization ownership and package-name authorization. Current npm CLI is unauthenticated; registry lookup returns 404, which does not establish ownership.
-- [ ] Choose and approve a license. Current package manifests use `UNLICENSED`; no license has been applied.
+- [x] Candidate tarballs are allowlisted to runtime files, declarations, README, and CLI executable; evidence, environment files, contracts, source, and dependencies are excluded.
+- [x] Candidate packages target Node `>=20.19.0`, share `0.1.0-rc.1`, and route prereleases to the `next` dist-tag when published.
+- [ ] Authenticate to npm and verify that the publishing account controls `@sazume`. `npm whoami` currently returns 401. Anonymous registry lookups return 404 for both candidate names but do not establish ownership or availability.
+- [ ] Verify an authorized alternative scope if `@sazume` is not controlled. No npm identity is available in this environment, so no alternative scope can be confirmed.
+- [ ] Approve a license. **Recommendation: MIT** for a simple permissive grant. Current package manifests remain `UNLICENSED`; MIT has not been applied and no license file has been created.
 - [ ] Remove private release-candidate flags, finalize metadata/versioning, and review actual tarballs immediately before publishing.
-- [ ] Explicit approval to run `npm publish --access public` for each package in dependency order (`@sazume/core`, then `@sazume/cli`).
+- [ ] Configure npm trusted publishing/provenance for the public GitHub repository, then explicitly approve publishing in dependency order (`@sazume/core`, then `@sazume/cli`). No publish workflow exists and no publish command was run.
 
-Apache-2.0 is a reasonable recommendation for a developer framework where an explicit patent grant is desirable; MIT is a simpler permissive alternative. The maintainers must select and approve the license. Neither recommendation grants permission to apply it automatically.
+### Candidate package details
+
+- `@sazume/core@0.1.0-rc.1`
+- `@sazume/cli@0.1.0-rc.1`, with an exact runtime dependency on `@sazume/core@0.1.0-rc.1`
+- Both manifests pin public registry access and the `next` tag but retain `private: true` and `UNLICENSED` until the release gates are approved. npm will refuse to publish a package marked private.
+- `npm pack --dry-run` and the independent tarball consumer test verify the actual contents and package interfaces. The CLI test checks ESM custom config, CommonJS `require` of core, declarations, installed executable, and CI pass/fail exit statuses.
+
+After account ownership, license approval, and metadata gates are resolved, the intended GitHub-hosted, public-repository workflow publish steps are:
+
+```sh
+npm publish --workspace=@sazume/core --access public --tag next --provenance
+npm publish --workspace=@sazume/cli --access public --tag next --provenance
+```
+
+These are **not executable in the current candidate state**: `private: true` is deliberately retained, npm ownership is unverified, licensing is unapproved, and provenance requires a configured supported CI publisher with OIDC (`id-token: write`). npm documents that trusted publishing automatically creates provenance attestations; publishing from a private repository does not support provenance. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) and [npm provenance generation](https://docs.npmjs.com/generating-provenance-statements/).
 
 ## Public source repository
 

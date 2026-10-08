@@ -71,7 +71,7 @@ npm run test:contracts
 npm run demo:arc-local
 ```
 
-The reference packages are local release candidates `@sazume/core` and `@sazume/cli` (`0.1.0-rc.1`). They are private, unpublished, and have no approved open-source license yet. Do not use `npm install @sazume/core` or `npm install @sazume/cli` until publication is announced.
+The reference packages are local release candidates `@sazume/core` and `@sazume/cli` (`0.1.0-rc.1`). They are private, unpublished, and have no approved open-source license yet. npm scope ownership is not verified. Do not use `npm install @sazume/core` or `npm install @sazume/cli` until publication is announced. See [npm release readiness](docs/release-readiness.md) for package and publication gates.
 
 ## Docs
 
