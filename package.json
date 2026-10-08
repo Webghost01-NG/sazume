@@ -2,7 +2,14 @@
   "name": "sazume-offchain-spike",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
+  "description": "Economic reliability testing for programmable money.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Webghost01-NG/sazume.git"
+  },
+  "homepage": "https://sazume.vercel.app",
   "workspaces": ["packages/core", "packages/cli"],
   "scripts": {
     "prepare": "npm run build:packages",

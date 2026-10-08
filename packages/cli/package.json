@@ -1,13 +1,12 @@
 {
   "name": "@sazume/cli",
   "version": "0.1.0-rc.1",
-  "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "description": "Command-line economic reliability testing for programmable-money applications.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Webghost01-NG/sazume.git",
+    "url": "git+https://github.com/Webghost01-NG/sazume.git",
     "directory": "packages/cli"
   },
   "homepage": "https://sazume.vercel.app/docs",
@@ -20,7 +19,7 @@
   "engines": {
     "node": ">=20.19.0"
   },
-  "files": ["bin", "dist", "README.md"],
+  "files": ["bin", "dist", "README.md", "LICENSE"],
   "dependencies": {
     "@sazume/core": "0.1.0-rc.1"
   },

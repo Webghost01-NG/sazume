@@ -41,11 +41,11 @@ function Introduction() {
 
 function GettingStarted() {
   return <>
-    <p className="docs-lede">The release candidates are not published to npm yet. In a Sazume source checkout, install dependencies and build the local packages first. No RPC, wallet, or key is used.</p>
+    <p className="docs-lede">The official packages are prepared as MIT-licensed release candidates but are not published to npm yet. In a Sazume source checkout, install dependencies and build the local packages first. No RPC, wallet, or key is used.</p>
     <Code>{`npm ci
 npm pack --workspace=@sazume/core
 npm pack --workspace=@sazume/cli`}</Code>
-    <p>Those commands create the two versioned tarballs in the checkout. Install both tarballs into a consumer project with <code>npm install /path/to/sazume-core-0.1.0-rc.1.tgz /path/to/sazume-cli-0.1.0-rc.1.tgz</code>. The npm scope and licensing still need publication approval.</p>
+    <p>Those commands create the two versioned tarballs in the checkout. Install both tarballs into a consumer project with <code>npm install /path/to/sazume-core-0.1.0-rc.1.tgz /path/to/sazume-cli-0.1.0-rc.1.tgz</code>. npm installation commands will be added after the public release has been verified.</p>
     <Code>{`npm run sazume -- test --adapter unsafe
 npm run sazume -- test --adapter idempotent`}</Code>
     <h2>Read the result</h2>
@@ -124,7 +124,7 @@ function Reference() {
     <h2>Unsafe settlement</h2><p>The fixture accepts repeated settlement calls for an intent. On the offchain model, observed state naturally reaches two settlements after a lost acknowledgement and retry.</p>
     <h2>Idempotent settlement</h2><p>The fixture prevents a second economic transfer for an already settled intent. The Arc Solidity fixture reverts the duplicate call; reverted execution consumes gas onchain but is not counted as a settlement.</p>
     <h2>Trust model</h2><p>Sazume can only evaluate the state its adapter can observe. On Arc qualification, the observer corroborates receipt status, matching events, and recipient ERC-20 balance delta; disagreement is surfaced as an observer inconsistency.</p>
-    <h2>Known limitations</h2><p>The package names are reserved as private release candidates and have not been published. Adapter quality and completeness remain the integrator's responsibility. The current scenario set is deliberately small and deterministic. No Mainnet evidence exists.</p>
+    <h2>Known limitations</h2><p>The package names are reserved for the upcoming public release candidate and have not been published yet. Adapter quality and completeness remain the integrator's responsibility. The current scenario set is deliberately small and deterministic. No Mainnet evidence exists.</p>
   </>;
 }
 

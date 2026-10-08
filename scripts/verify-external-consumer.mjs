@@ -21,8 +21,8 @@ const cliManifest = JSON.parse(await readFile(join(root, "packages/cli/package.j
 assert.equal(coreManifest.version, cliManifest.version, "public packages must use the same prerelease version");
 assert.equal(cliManifest.dependencies["@sazume/core"], coreManifest.version, "CLI must depend on the matching core release");
 for (const manifest of [coreManifest, cliManifest]) {
-  assert.equal(manifest.private, true, "candidate packages stay protected from accidental publication");
-  assert.equal(manifest.license, "UNLICENSED", "a license must not be applied without approval");
+  assert.equal(manifest.private, undefined, "approved package manifests must be publishable");
+  assert.equal(manifest.license, "MIT", "package metadata must match the repository license");
   assert.equal(manifest.engines.node, ">=20.19.0");
   assert.deepEqual(manifest.publishConfig, { access: "public", tag: "next", registry: "https://registry.npmjs.org/" });
 }
@@ -35,10 +35,11 @@ function packInfo(workspace) {
   const paths = info.files.map(({ path }) => path);
   assert.ok(paths.includes("package.json"));
   assert.ok(paths.includes("README.md"));
+  assert.ok(paths.includes("LICENSE"));
   assert.ok(paths.every((path) => !/(^|\/)(?:\.env(?:\.|$)|evidence|node_modules|contracts|\.git)(\/|$)/i.test(path)), `${workspace} tarball must exclude secrets, private evidence, dependencies, contracts, and git files`);
   assert.ok(paths.every((path) => workspace === "@sazume/core"
-    ? ["README.md", "package.json"].includes(path) || path.startsWith("dist/")
-    : ["README.md", "package.json", "bin/sazume.js"].includes(path) || path.startsWith("dist/")), `${workspace} tarball contains an unreviewed path`);
+    ? ["README.md", "LICENSE", "package.json"].includes(path) || path.startsWith("dist/")
+    : ["README.md", "LICENSE", "package.json", "bin/sazume.js"].includes(path) || path.startsWith("dist/")), `${workspace} tarball contains an unreviewed path`);
   return { info, paths };
 }
 

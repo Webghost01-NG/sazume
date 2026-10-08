@@ -1,13 +1,12 @@
 {
   "name": "@sazume/core",
   "version": "0.1.0-rc.1",
-  "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
   "type": "module",
   "description": "Economic intent, scenario, adapter, observation and invariant primitives for Sazume.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Webghost01-NG/sazume.git",
+    "url": "git+https://github.com/Webghost01-NG/sazume.git",
     "directory": "packages/core"
   },
   "homepage": "https://sazume.vercel.app/docs",
@@ -20,7 +19,7 @@
   "engines": {
     "node": ">=20.19.0"
   },
-  "files": ["dist", "README.md"],
+  "files": ["dist", "README.md", "LICENSE"],
   "sideEffects": false,
   "types": "./dist/esm/index.d.ts",
   "exports": {
