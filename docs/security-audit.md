@@ -27,4 +27,4 @@ The workspace's build/test tooling now requires Node 22.12 or newer because Vite
 
 ## Residual risk
 
-Zero findings does not establish that code is safe. Config files passed to the CLI are trusted executable JavaScript and can perform any action available to the user running the CLI. The package names and licenses are not publication-authorized yet; npm publication remains blocked pending account/namespace and licensing decisions. No dependency is installed from an untrusted mirror, and no audit finding was suppressed.
+Zero findings does not establish that code is safe. Config files passed to the CLI are trusted executable JavaScript and can perform any action available to the user running the CLI. The `@sazume` namespace is controlled by the verified `sazume` npm organization, and the packages now carry the MIT license. The `0.1.0-rc.1` versions remain unpublished pending the final release confirmation and npm staged-release workflow. No dependency is installed from an untrusted mirror, and no audit finding was suppressed.

@@ -1,6 +1,6 @@
 # Release and public-repository readiness
 
-Status checked 2026-10-08. This checklist records prerequisites; it does not authorize publication or Mainnet transactions.
+Status checked 2026-10-08. Package publication remains gated by final maintainer confirmation; no Mainnet transactions are authorized.
 
 ## npm release candidate
 
@@ -10,27 +10,31 @@ Status checked 2026-10-08. This checklist records prerequisites; it does not aut
 - [x] JSON output, deterministic scenarios, exit codes, and no-network CI behavior validated.
 - [x] Candidate tarballs are allowlisted to runtime files, declarations, README, and CLI executable; evidence, environment files, contracts, source, and dependencies are excluded.
 - [x] Candidate packages target Node `>=20.19.0`, share `0.1.0-rc.1`, and route prereleases to the `next` dist-tag when published.
-- [ ] Authenticate to npm and verify that the publishing account controls `@sazume`. `npm whoami` currently returns 401. Anonymous registry lookups return 404 for both candidate names but do not establish ownership or availability.
-- [ ] Verify an authorized alternative scope if `@sazume` is not controlled. No npm identity is available in this environment, so no alternative scope can be confirmed.
-- [ ] Approve a license. **Recommendation: MIT** for a simple permissive grant. Current package manifests remain `UNLICENSED`; MIT has not been applied and no license file has been created.
-- [ ] Remove private release-candidate flags, finalize metadata/versioning, and review actual tarballs immediately before publishing.
-- [ ] Configure npm trusted publishing/provenance for the public GitHub repository, then explicitly approve publishing in dependency order (`@sazume/core`, then `@sazume/cli`). No publish workflow exists and no publish command was run.
+- [x] Authenticate to npm as `webghost01`; registry is `https://registry.npmjs.org/`.
+- [x] Create the official `sazume` organization and verify `webghost01` as `owner` with `npm org ls sazume`.
+- [x] Confirm `@sazume/core` and `@sazume/cli` are not yet present in the public registry (404 on 2026-10-08).
+- [x] Apply MIT license with the authorized project identity `W3BGHOST`, copyright year 2026.
+- [x] Remove `private: true` from the two approved npm packages only. The monorepo root remains private.
+- [x] Finalize package metadata, ESM/CommonJS core exports, declarations, executable CLI, exact core dependency, Node engine, files allowlist, and `next` tag.
+- [x] Add a stage-only GitHub Actions workflow with OIDC provenance; it is manual, restricted to `main`, and requires typed package/version confirmation.
+- [ ] Bootstrap each new package's npm page, configure its trusted publisher after the package exists, then stage the candidate through GitHub Actions and approve it with npm 2FA in dependency order (`@sazume/core`, then `@sazume/cli`). No npm stage or publish command has been run against the registry.
+- [ ] Obtain final maintainer confirmation before any public npm package action. First staging for a new name makes a `0.0.0-stage` placeholder publicly visible; disclose this alongside the exact commands before proceeding.
 
 ### Candidate package details
 
 - `@sazume/core@0.1.0-rc.1`
 - `@sazume/cli@0.1.0-rc.1`, with an exact runtime dependency on `@sazume/core@0.1.0-rc.1`
-- Both manifests pin public registry access and the `next` tag but retain `private: true` and `UNLICENSED` until the release gates are approved. npm will refuse to publish a package marked private.
+- Both manifests pin public registry access and the `next` tag, use MIT, and are publishable. Versions remain unpublished.
 - `npm pack --dry-run` and the independent tarball consumer test verify the actual contents and package interfaces. The CLI test checks ESM custom config, CommonJS `require` of core, declarations, installed executable, and CI pass/fail exit statuses.
 
-After account ownership, license approval, and metadata gates are resolved, the intended GitHub-hosted, public-repository workflow publish steps are:
+After a package exists and its trusted publisher is configured, the GitHub-hosted stage workflow runs one of:
 
 ```sh
-npm publish --workspace=@sazume/core --access public --tag next --provenance
-npm publish --workspace=@sazume/cli --access public --tag next --provenance
+npm stage publish --workspace=@sazume/core --access public --tag next --provenance
+npm stage publish --workspace=@sazume/cli --access public --tag next --provenance
 ```
 
-These are **not executable in the current candidate state**: `private: true` is deliberately retained, npm ownership is unverified, licensing is unapproved, and provenance requires a configured supported CI publisher with OIDC (`id-token: write`). npm documents that trusted publishing automatically creates provenance attestations; publishing from a private repository does not support provenance. See [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) and [npm provenance generation](https://docs.npmjs.com/generating-provenance-statements/).
+New names need a one-time bootstrap because npm requires a package to exist before a trusted publisher can be configured. npm's first staged publish makes a public `0.0.0-stage` placeholder; the staged release contents remain unavailable until explicit 2FA approval. This public placeholder step is included in the final publication confirmation. See [npm staged publishing](https://docs.npmjs.com/staged-publishing/) and [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/).
 
 ## Public source repository
 
@@ -39,14 +43,14 @@ These are **not executable in the current candidate state**: `private: true` is 
 - [x] Main branch requires CI checks; force pushes are disabled.
 - [x] GitHub secret scanning and push protection are enabled; no open alerts were returned at the latest check.
 - [x] Review commit identities, Testnet evidence, environment examples, and operational notes as public content. Existing commit metadata includes the maintainer's personal Gmail address; history was intentionally preserved. Use the GitHub noreply address for future commits. No secret values were found by the project scan.
-- [ ] Approve and apply an open-source license. Current package manifests remain `UNLICENSED`.
+- [x] Apply the MIT license to the repository and the two approved package manifests.
 
-The repository may be viewed publicly without an open-source license, but absent a license, visitors do not receive standard permission to reuse or redistribute the source. The commit email remains a privacy consideration; it was deliberately preserved rather than rewriting existing history.
+The commit email remains a privacy consideration; it was deliberately preserved rather than rewriting existing history.
 
 ## Vercel production tracking
 
-- [ ] Vercel is connected to `Webghost01-NG/sazume`, but its Production Branch still reads `feat/arc-solidity-observer`. The `main` merge created a Preview deployment; the `sazume.vercel.app` production alias still needs the Vercel Project Settings → Environments → Production → Branch Tracking value changed to `main` and saved.
-- [x] The public homepage and `/docs` return HTTP 200. A successful Preview deployment is not evidence that production tracks `main`.
+- [x] Vercel project is connected to `Webghost01-NG/sazume`; the newest Production deployment reports Git ref `main` at `d920177` (verified 2026-10-08).
+- [x] The public homepage and `/docs` return HTTP 200. Reverify after the npm release documentation deployment.
 
 ## Arc Microgrants
 
