@@ -212,6 +212,7 @@ describe("Arc Mainnet spend preflight", () => {
 
   it("rejects a missing or different signer", () => {
     expect(() => assertArcMainnetWritePlan({ ...plan, selectedSignerAddress: undefined })).toThrow("explicitly selected signer");
+    expect(() => assertArcMainnetWritePlan({ ...plan, selectedSignerAddress: "0x0000000000000000000000000000000000000000" })).toThrow("zero address");
     expect(() => assertArcMainnetWritePlan({ ...plan, approvedSignerAddress: "0x0000000000000000000000000000000000000001" })).toThrow("does not match");
   });
 
@@ -219,6 +220,8 @@ describe("Arc Mainnet spend preflight", () => {
     expect(() => assertArcMainnetWritePlan({ ...plan, plannedTransactions: 9 })).toThrow("transaction count exceeds");
     expect(() => assertArcMainnetWritePlan({ ...plan, principalUsdc6: 30_001n })).toThrow("principal exceeds");
     expect(() => assertArcMainnetWritePlan({ ...plan, gasExposureNative18: plan.maximumGasExposureNative18 + 1n })).toThrow("gas exposure exceeds");
+    expect(() => assertArcMainnetWritePlan({ ...plan, gasExposureNative18: 0n })).toThrow("positive estimate");
     expect(() => assertArcMainnetWritePlan({ ...plan, maximumTotalExposureNative18: 92_829_519_999_999_999n })).toThrow("Total Mainnet exposure exceeds");
+    expect(() => assertArcMainnetWritePlan({ ...plan, principalUsdc6: 1n << 256n })).toThrow("uint256 bigint");
   });
 });

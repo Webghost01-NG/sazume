@@ -28,6 +28,7 @@ export function assertArcMainnetWritePlan(plan: ArcMainnetWritePlan): void {
   const signer = plan.selectedSignerAddress;
   const approvedSigner = plan.approvedSignerAddress;
   if (!signer || !/^0x[0-9a-fA-F]{40}$/.test(signer)) throw new Error("Mainnet preflight requires an explicitly selected signer address");
+  if (/^0x0{40}$/i.test(signer)) throw new Error("Mainnet preflight cannot use the zero address as signer");
   if (!approvedSigner || signer.toLowerCase() !== approvedSigner.toLowerCase()) throw new Error("Selected Mainnet signer does not match the explicitly approved address");
   if (!Number.isSafeInteger(plan.plannedTransactions) || plan.plannedTransactions <= 0) throw new Error("Mainnet transaction count must be a positive safe integer");
   if (!Number.isSafeInteger(plan.maximumTransactions) || plan.maximumTransactions <= 0 || plan.plannedTransactions > plan.maximumTransactions) throw new Error("Planned Mainnet transaction count exceeds the approved maximum");
@@ -42,6 +43,7 @@ export function assertArcMainnetWritePlan(plan: ArcMainnetWritePlan): void {
     if (typeof value !== "bigint" || value < 0n || value > UINT256_MAX) throw new Error(`${name} must be a non-negative uint256 bigint`);
   }
   if (plan.principalUsdc6 === 0n) throw new Error("Mainnet principal exposure must be non-zero");
+  if (plan.gasExposureNative18 === 0n) throw new Error("Mainnet gas exposure must include a positive estimate");
   if (plan.principalUsdc6 > plan.maximumPrincipalUsdc6) throw new Error("Mainnet principal exceeds the approved cap");
   if (plan.gasExposureNative18 > plan.maximumGasExposureNative18) throw new Error("Mainnet gas exposure exceeds the approved cap");
   const totalExposureNative18 = plan.principalUsdc6 * 1_000_000_000_000n + plan.gasExposureNative18;
