@@ -1,0 +1,47 @@
+{
+  "network": "arc-testnet",
+  "chainId": 5042002,
+  "payerAddress": "0x6CeD8D6Bad8Dfd2e60BCEA116fE74548f959f1F2",
+  "outcomes": [
+    {
+      "fixture": "unsafe",
+      "scenario": "normal",
+      "result": "PASS"
+    },
+    {
+      "fixture": "unsafe",
+      "scenario": "timeout-before-settlement",
+      "result": "PASS"
+    },
+    {
+      "fixture": "unsafe",
+      "scenario": "timeout-after-settlement",
+      "result": "FAIL"
+    },
+    {
+      "fixture": "unsafe",
+      "scenario": "duplicate-callback",
+      "result": "FAIL"
+    },
+    {
+      "fixture": "fixed",
+      "scenario": "normal",
+      "result": "PASS"
+    },
+    {
+      "fixture": "fixed",
+      "scenario": "timeout-before-settlement",
+      "result": "PASS"
+    },
+    {
+      "fixture": "fixed",
+      "scenario": "timeout-after-settlement",
+      "result": "PASS"
+    },
+    {
+      "fixture": "fixed",
+      "scenario": "duplicate-callback",
+      "result": "PASS"
+    }
+  ]
+}

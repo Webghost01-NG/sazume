@@ -1,0 +1,125 @@
+{
+  "network": "arc-testnet",
+  "chainId": 5042002,
+  "rpcUrl": "https://rpc.testnet.arc.io",
+  "stage": "full",
+  "scenario": "duplicate-callback",
+  "intent": {
+    "humanId": "SAZUME-ARC-DUPLICATE-CALLBACK-FIXED-001",
+    "intentId": "b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c",
+    "retryIdentityPreserved": true
+  },
+  "contract": "0x0908e0409d593409d251306302fdca0c45198b9c",
+  "payerAddress": "0x6CeD8D6Bad8Dfd2e60BCEA116fE74548f959f1F2",
+  "recipientAddress": "0x6dA84D6097d1D4A97540c31ad3341F3B11D9A8C5",
+  "usdcAddress": "0x3600000000000000000000000000000000000000",
+  "qualificationAmountUsdc6": "10000",
+  "demoNarrativeAmountUsdc6": "1000000",
+  "recipientBalanceBeforeUsdc6": "110000",
+  "recipientBalanceAfterUsdc6": "120000",
+  "recipientDeltaUsdc6": "10000",
+  "settlementAttempts": 1,
+  "successfulReceipts": 1,
+  "revertedReceipts": 0,
+  "matchingEvents": [
+    {
+      "txHash": "0xc8a843c05a2290b429e7f4ef5a1ba8ccad8b2b29be2253f582e3aa58351fb3e1",
+      "amountUsdc6": "10000",
+      "receiptStatus": "success"
+    }
+  ],
+  "observedSettlementCount": 1,
+  "observedSettlementAmountUsdc6": "10000",
+  "fulfillmentCount": 1,
+  "invariantResults": [
+    {
+      "name": "Settlement uniqueness",
+      "passed": true,
+      "expected": "<= 1",
+      "observed": "1"
+    },
+    {
+      "name": "Recipient amount",
+      "passed": true,
+      "expected": "0.010000 USDC",
+      "observed": "10000 base units"
+    },
+    {
+      "name": "Fulfillment uniqueness",
+      "passed": true,
+      "expected": "<= 1",
+      "observed": "1"
+    },
+    {
+      "name": "Completion consistency",
+      "passed": true,
+      "expected": "completed implies settlement and fulfillment",
+      "observed": "completed=true, settlements=1, fulfillments=1"
+    }
+  ],
+  "passed": true,
+  "receiptEventBalanceAgreement": true,
+  "inconsistency": [],
+  "verdict": "PASS",
+  "transactions": [
+    {
+      "hash": "0xc8a843c05a2290b429e7f4ef5a1ba8ccad8b2b29be2253f582e3aa58351fb3e1",
+      "status": "success",
+      "blockNumber": "65539715",
+      "gasUsed": "82604",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "2065100000000000",
+      "gasCostUsdc6": "2065"
+    }
+  ],
+  "trace": [
+    {
+      "sequence": 1,
+      "type": "settlement-attempt",
+      "intentId": "b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c"
+    },
+    {
+      "sequence": 2,
+      "type": "settlement-observed",
+      "intentId": "b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c"
+    },
+    {
+      "sequence": 3,
+      "type": "callback",
+      "intentId": "b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c",
+      "metadata": {
+        "delivery": 1
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "fulfillment-attempt",
+      "intentId": "b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c"
+    },
+    {
+      "sequence": 5,
+      "type": "fulfillment-observed",
+      "intentId": "b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c"
+    },
+    {
+      "sequence": 6,
+      "type": "callback",
+      "intentId": "b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c",
+      "metadata": {
+        "delivery": 2,
+        "duplicate": true
+      }
+    },
+    {
+      "sequence": 7,
+      "type": "fulfillment-attempt",
+      "intentId": "b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c"
+    },
+    {
+      "sequence": 8,
+      "type": "fulfillment-observed",
+      "intentId": "b6c45387be23b426148d3a16cbcd6724cef9e1573f590bd1e35ca82404df612c"
+    }
+  ],
+  "finality": "Receipt returned after inclusion; Arc docs specify deterministic finality on inclusion. No confirmation-depth wait was added."
+}

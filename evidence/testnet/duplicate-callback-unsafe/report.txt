@@ -1,0 +1,49 @@
+SAZUME — ARC TESTNET QUALIFICATION
+Network: Arc Testnet (5042002)
+Scenario: duplicate-callback
+Intent: SAZUME-ARC-DUPLICATE-CALLBACK-UNSAFE-001 (2d53e02df0c2e0b50c10109f3e59417c8915f53cd28cf8ce06181e9e8ea65f00)
+Contract: 0x8cd2da9e45d18c47a803f065a3625ae68bf37b17
+Amount: 0.01 USDC (10000 USDC6)
+Settlement attempts: 1
+Successful receipts: 1
+Reverted receipts: 0
+Matching events: 1
+Recipient delta: 10000 USDC6
+Observed settlements: 1
+Fulfillments: 2
+Receipt/event/balance agree: true
+Verdict: FAIL
+
+SAZUME
+Economic Reliability Test — UNSAFE
+────────────────────────────────
+
+Intent        SAZUME-ARC-DUPLICATE-CALLBACK-UNSAFE-001
+Expected      0.010000 USDC
+
+✕ duplicate-callback
+
+ECONOMIC INVARIANT VIOLATION
+
+Fulfillment uniqueness
+  expected    <= 1
+  observed    2
+
+TRACE
+  01 settlement-attempt
+  02 settlement-observed
+  03 callback
+  04 fulfillment-attempt
+  05 fulfillment-observed
+  06 callback
+  07 fulfillment-attempt
+  08 fulfillment-observed
+
+────────────────────────────────
+0 passed
+1 failed
+
+ECONOMIC INTENT NOT PRESERVED
+
+TRANSACTIONS
+0xa04c67365e3046a96c32be0377f9e4cf8b33b7c17bf7b1c287ac48f6be9f2d1b success block=65539500 gasUsed=60121 effectiveGasPrice=25000000000 gasCostNative18=1503025000000000 gasCostUsdc6=1503

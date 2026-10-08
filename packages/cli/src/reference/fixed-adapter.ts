@@ -1,0 +1,38 @@
+import type { EconomicAdapter, EconomicIntent, EconomicOutcome, FulfillmentResult, SettlementResult } from "@sazume/core";
+
+export class FixedAdapter implements EconomicAdapter {
+  private settlements = new Map<string, bigint>();
+  private fulfillments = new Set<string>();
+  private completed = new Set<string>();
+
+  async settle(intent: EconomicIntent): Promise<SettlementResult> {
+    const existing = this.settlements.get(intent.intentId);
+    if (existing !== undefined) return { accepted: false, amount: existing };
+    this.settlements.set(intent.intentId, intent.payment.amount);
+    return { accepted: true, amount: intent.payment.amount };
+  }
+
+  async fulfill(intent: EconomicIntent): Promise<FulfillmentResult> {
+    if (this.fulfillments.has(intent.intentId)) return { accepted: false };
+    this.fulfillments.add(intent.intentId);
+    return { accepted: true };
+  }
+
+  async markComplete(intent: EconomicIntent): Promise<void> { this.completed.add(intent.intentId); }
+
+  async observe(intent: EconomicIntent): Promise<EconomicOutcome> {
+    const amount = this.settlements.get(intent.intentId);
+    return {
+      intentId: intent.intentId,
+      settlement: { count: amount === undefined ? 0 : 1, totalAmount: amount ?? 0n },
+      fulfillment: { count: this.fulfillments.has(intent.intentId) ? 1 : 0 },
+      completed: this.completed.has(intent.intentId),
+    };
+  }
+
+  async reset(): Promise<void> {
+    this.settlements.clear();
+    this.fulfillments.clear();
+    this.completed.clear();
+  }
+}

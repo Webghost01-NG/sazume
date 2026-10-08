@@ -1,0 +1,130 @@
+{
+  "network": "arc-testnet",
+  "chainId": 5042002,
+  "rpcUrl": "https://rpc.testnet.arc.io",
+  "stage": "hero",
+  "scenario": "timeout-after-settlement",
+  "intent": {
+    "humanId": "SAZUME-ARC-TIMEOUT-AFTER-FIXED-001",
+    "intentId": "19e47c423924acddb1eff32c9b15fe426dfef4a8b4f07375d431e6dcf5f27ac5",
+    "retryIdentityPreserved": true
+  },
+  "contract": "0x0908e0409d593409d251306302fdca0c45198b9c",
+  "payerAddress": "0x6CeD8D6Bad8Dfd2e60BCEA116fE74548f959f1F2",
+  "recipientAddress": "0x6dA84D6097d1D4A97540c31ad3341F3B11D9A8C5",
+  "usdcAddress": "0x3600000000000000000000000000000000000000",
+  "qualificationAmountUsdc6": "10000",
+  "demoNarrativeAmountUsdc6": "1000000",
+  "recipientBalanceBeforeUsdc6": "20000",
+  "recipientBalanceAfterUsdc6": "30000",
+  "recipientDeltaUsdc6": "10000",
+  "settlementAttempts": 2,
+  "successfulReceipts": 1,
+  "revertedReceipts": 1,
+  "matchingEvents": [
+    {
+      "txHash": "0x22bcce2b69acb296750c9dbbc9bc4dd1b65b7111042996b13ab15432a088e0fc",
+      "amountUsdc6": "10000",
+      "receiptStatus": "success"
+    }
+  ],
+  "observedSettlementCount": 1,
+  "observedSettlementAmountUsdc6": "10000",
+  "fulfillmentCount": 1,
+  "invariantResults": [
+    {
+      "name": "Settlement uniqueness",
+      "passed": true,
+      "expected": "<= 1",
+      "observed": "1"
+    },
+    {
+      "name": "Recipient amount",
+      "passed": true,
+      "expected": "0.010000 USDC",
+      "observed": "10000 base units"
+    },
+    {
+      "name": "Fulfillment uniqueness",
+      "passed": true,
+      "expected": "<= 1",
+      "observed": "1"
+    },
+    {
+      "name": "Completion consistency",
+      "passed": true,
+      "expected": "completed implies settlement and fulfillment",
+      "observed": "completed=true, settlements=1, fulfillments=1"
+    }
+  ],
+  "passed": true,
+  "receiptEventBalanceAgreement": true,
+  "inconsistency": [],
+  "verdict": "PASS",
+  "transactions": [
+    {
+      "hash": "0x22bcce2b69acb296750c9dbbc9bc4dd1b65b7111042996b13ab15432a088e0fc",
+      "status": "success",
+      "blockNumber": "65539167",
+      "gasUsed": "87404",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "2185100000000000",
+      "gasCostUsdc6": "2185"
+    },
+    {
+      "hash": "0x0ed7cb17bcc6cee460f7d1ed39f9fd704ff252b36802c40ea00b1a1dbd8b1d03",
+      "status": "reverted",
+      "blockNumber": "65539171",
+      "gasUsed": "25293",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "632325000000000",
+      "gasCostUsdc6": "632"
+    }
+  ],
+  "trace": [
+    {
+      "sequence": 1,
+      "type": "settlement-attempt",
+      "intentId": "19e47c423924acddb1eff32c9b15fe426dfef4a8b4f07375d431e6dcf5f27ac5"
+    },
+    {
+      "sequence": 2,
+      "type": "settlement-observed",
+      "intentId": "19e47c423924acddb1eff32c9b15fe426dfef4a8b4f07375d431e6dcf5f27ac5"
+    },
+    {
+      "sequence": 3,
+      "type": "timeout",
+      "intentId": "19e47c423924acddb1eff32c9b15fe426dfef4a8b4f07375d431e6dcf5f27ac5",
+      "metadata": {
+        "phase": "response-lost-after-settlement"
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "retry",
+      "intentId": "19e47c423924acddb1eff32c9b15fe426dfef4a8b4f07375d431e6dcf5f27ac5"
+    },
+    {
+      "sequence": 5,
+      "type": "settlement-attempt",
+      "intentId": "19e47c423924acddb1eff32c9b15fe426dfef4a8b4f07375d431e6dcf5f27ac5"
+    },
+    {
+      "sequence": 6,
+      "type": "settlement-observed",
+      "intentId": "19e47c423924acddb1eff32c9b15fe426dfef4a8b4f07375d431e6dcf5f27ac5"
+    },
+    {
+      "sequence": 7,
+      "type": "fulfillment-attempt",
+      "intentId": "19e47c423924acddb1eff32c9b15fe426dfef4a8b4f07375d431e6dcf5f27ac5"
+    },
+    {
+      "sequence": 8,
+      "type": "fulfillment-observed",
+      "intentId": "19e47c423924acddb1eff32c9b15fe426dfef4a8b4f07375d431e6dcf5f27ac5"
+    }
+  ],
+  "finality": "Receipt returned after inclusion; Arc docs specify deterministic finality on inclusion. No confirmation-depth wait was added."
+}

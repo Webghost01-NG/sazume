@@ -1,0 +1,39 @@
+{
+  "name": "@sazume/cli",
+  "version": "0.1.0-rc.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "description": "Command-line economic reliability testing for programmable-money applications.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Webghost01-NG/sazume.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://sazume.vercel.app/docs",
+  "keywords": ["economic reliability", "payments", "testing", "programmable money"],
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "files": ["bin", "dist", "README.md"],
+  "dependencies": {
+    "@sazume/core": "0.1.0-rc.1"
+  },
+  "bin": {
+    "sazume": "bin/sazume.js"
+  },
+  "exports": {
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "import": "./dist/config.js"
+    },
+    "./scenarios": {
+      "types": "./dist/scenarios/index.d.ts",
+      "import": "./dist/scenarios/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "npm run build"
+  }
+}

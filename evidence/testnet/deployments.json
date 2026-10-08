@@ -1,0 +1,59 @@
+{
+  "network": "arc-testnet",
+  "chainId": 5042002,
+  "rpcUrl": "https://rpc.testnet.arc.io",
+  "usdcAddress": "0x3600000000000000000000000000000000000000",
+  "payerAddress": "0x6CeD8D6Bad8Dfd2e60BCEA116fE74548f959f1F2",
+  "recipientAddress": "0x6dA84D6097d1D4A97540c31ad3341F3B11D9A8C5",
+  "qualificationAmountUsdc6": "10000",
+  "demoNarrativeAmountUsdc6": "1000000",
+  "initialBalances": {
+    "payerNativeUsdc18": "40000000000000000000",
+    "payerErc20Usdc6": "40000000",
+    "recipientErc20Usdc6": "0"
+  },
+  "unsafe": {
+    "address": "0x8cd2da9e45d18c47a803f065a3625ae68bf37b17",
+    "receipt": {
+      "hash": "0xb2767457dd4206f2f85b47c5980d07b2e30e9d6c344e23b5842ec2265e151088",
+      "status": "success",
+      "blockNumber": "65539130",
+      "gasUsed": "435156",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "10878900000000000",
+      "gasCostUsdc6": "10878"
+    }
+  },
+  "fixed": {
+    "address": "0x0908e0409d593409d251306302fdca0c45198b9c",
+    "receipt": {
+      "hash": "0x8559f33c733f0d08af6ee70cace8d881e7a4720e2682904aa7e81929ab1eedf0",
+      "status": "success",
+      "blockNumber": "65539134",
+      "gasUsed": "509371",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "12734275000000000",
+      "gasCostUsdc6": "12734"
+    }
+  },
+  "approvals": [
+    {
+      "hash": "0x5cb731ddfeb0e8c83f86f24d1565d1ba7d59928ba90f90afd654679d8ab3b904",
+      "status": "success",
+      "blockNumber": "65539137",
+      "gasUsed": "55438",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "1385950000000000",
+      "gasCostUsdc6": "1385"
+    },
+    {
+      "hash": "0xb2d418186259b9bcdaa630b2b625f48fb315448ef9cf2cb57ea48eb69c4f44a1",
+      "status": "success",
+      "blockNumber": "65539138",
+      "gasUsed": "55426",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "1385650000000000",
+      "gasCostUsdc6": "1385"
+    }
+  ]
+}

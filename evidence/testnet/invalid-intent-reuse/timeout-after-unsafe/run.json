@@ -1,0 +1,137 @@
+{
+  "network": "arc-testnet",
+  "chainId": 5042002,
+  "rpcUrl": "https://rpc.testnet.arc.io",
+  "stage": "full",
+  "scenario": "timeout-after-settlement",
+  "intent": {
+    "humanId": "SAZUME-ARC-TIMEOUT-AFTER-UNSAFE-001",
+    "intentId": "5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6",
+    "retryIdentityPreserved": true
+  },
+  "contract": "0x8cd2da9e45d18c47a803f065a3625ae68bf37b17",
+  "payerAddress": "0x6CeD8D6Bad8Dfd2e60BCEA116fE74548f959f1F2",
+  "recipientAddress": "0x6dA84D6097d1D4A97540c31ad3341F3B11D9A8C5",
+  "usdcAddress": "0x3600000000000000000000000000000000000000",
+  "qualificationAmountUsdc6": "10000",
+  "demoNarrativeAmountUsdc6": "1000000",
+  "recipientBalanceBeforeUsdc6": "50000",
+  "recipientBalanceAfterUsdc6": "70000",
+  "recipientDeltaUsdc6": "20000",
+  "settlementAttempts": 2,
+  "successfulReceipts": 2,
+  "revertedReceipts": 0,
+  "matchingEvents": [
+    {
+      "txHash": "0xcd6934caf281532d6a329d8e0aeb7ad0758174707b437718a1a783b94f23a9f0",
+      "amountUsdc6": "10000",
+      "receiptStatus": "success"
+    },
+    {
+      "txHash": "0xa3855424fe73db63d2ebe90cb60ba77e001978a13793026f2df4a845bf3b2dc6",
+      "amountUsdc6": "10000",
+      "receiptStatus": "success"
+    }
+  ],
+  "observedSettlementCount": 2,
+  "observedSettlementAmountUsdc6": "20000",
+  "fulfillmentCount": 1,
+  "invariantResults": [
+    {
+      "name": "Settlement uniqueness",
+      "passed": false,
+      "expected": "<= 1",
+      "observed": "2",
+      "message": "One economic intent produced multiple settlements."
+    },
+    {
+      "name": "Recipient amount",
+      "passed": false,
+      "expected": "0.010000 USDC",
+      "observed": "20000 base units",
+      "message": "Completed intent did not deliver exactly the intended amount."
+    },
+    {
+      "name": "Fulfillment uniqueness",
+      "passed": true,
+      "expected": "<= 1",
+      "observed": "1"
+    },
+    {
+      "name": "Completion consistency",
+      "passed": true,
+      "expected": "completed implies settlement and fulfillment",
+      "observed": "completed=true, settlements=2, fulfillments=1"
+    }
+  ],
+  "passed": false,
+  "receiptEventBalanceAgreement": true,
+  "inconsistency": [],
+  "verdict": "FAIL",
+  "transactions": [
+    {
+      "hash": "0xcd6934caf281532d6a329d8e0aeb7ad0758174707b437718a1a783b94f23a9f0",
+      "status": "success",
+      "blockNumber": "65539487",
+      "gasUsed": "64933",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "1623325000000000",
+      "gasCostUsdc6": "1623"
+    },
+    {
+      "hash": "0xa3855424fe73db63d2ebe90cb60ba77e001978a13793026f2df4a845bf3b2dc6",
+      "status": "success",
+      "blockNumber": "65539492",
+      "gasUsed": "64933",
+      "effectiveGasPrice": "25000000000",
+      "gasCostNative18": "1623325000000000",
+      "gasCostUsdc6": "1623"
+    }
+  ],
+  "trace": [
+    {
+      "sequence": 1,
+      "type": "settlement-attempt",
+      "intentId": "5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6"
+    },
+    {
+      "sequence": 2,
+      "type": "settlement-observed",
+      "intentId": "5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6"
+    },
+    {
+      "sequence": 3,
+      "type": "timeout",
+      "intentId": "5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6",
+      "metadata": {
+        "phase": "response-lost-after-settlement"
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "retry",
+      "intentId": "5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6"
+    },
+    {
+      "sequence": 5,
+      "type": "settlement-attempt",
+      "intentId": "5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6"
+    },
+    {
+      "sequence": 6,
+      "type": "settlement-observed",
+      "intentId": "5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6"
+    },
+    {
+      "sequence": 7,
+      "type": "fulfillment-attempt",
+      "intentId": "5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6"
+    },
+    {
+      "sequence": 8,
+      "type": "fulfillment-observed",
+      "intentId": "5c3a95adc37dd29094285c1e7944a47a994216898643360e61165941f95130f6"
+    }
+  ],
+  "finality": "Receipt returned after inclusion; Arc docs specify deterministic finality on inclusion. No confirmation-depth wait was added."
+}
