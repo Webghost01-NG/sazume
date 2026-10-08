@@ -1,0 +1,71 @@
+name: Stage npm release candidate
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package to stage after its npm trusted publisher is configured
+        type: choice
+        required: true
+        options:
+          - core
+          - cli
+      confirmation:
+        description: Type the exact staging confirmation shown in the prompt
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-stage-${{ inputs.package }}
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      inputs.confirmation == format('STAGE @sazume/{0}@0.1.0-rc.1', inputs.package)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install npm with staged publishing and OIDC support
+        run: npm install --global npm@11.21.0
+      - name: Confirm release manifests
+        run: node scripts/verify-release-manifests.mjs
+      - name: Install dependencies
+        run: npm ci
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+      - name: Validate packages and economic behavior
+        run: |
+          npm test
+          npm run typecheck
+          npm run build
+          npm run demo
+          npm run test:contracts
+          npm run demo:arc-local
+          npm run test:external-consumer
+          npm audit --audit-level=low
+          npm pack --workspace=@sazume/core --dry-run
+          npm pack --workspace=@sazume/cli --dry-run
+      - name: Confirm core release before staging CLI
+        if: inputs.package == 'cli'
+        run: npm view @sazume/core@0.1.0-rc.1 version
+      - name: Stage core with npm OIDC provenance
+        if: inputs.package == 'core'
+        run: npm stage publish --workspace=@sazume/core --access public --tag next --provenance
+      - name: Stage CLI with npm OIDC provenance
+        if: inputs.package == 'cli'
+        run: npm stage publish --workspace=@sazume/cli --access public --tag next --provenance
