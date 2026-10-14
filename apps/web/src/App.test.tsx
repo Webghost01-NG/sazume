@@ -15,14 +15,16 @@ async function finishReplay() {
 }
 
 describe("Sazume evidence replay interface", () => {
-  it("labels the network and replay honestly without claiming Mainnet verification", () => {
+  it("separates the Testnet replay from the historical Mainnet qualification", () => {
     render(<App />);
 
     expect(screen.getAllByText(/ARC TESTNET/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/VERIFIED EVIDENCE REPLAY/).length).toBeGreaterThan(0);
     expect(screen.getByText(/previously executed Arc Testnet run/)).toBeTruthy();
     expect(screen.getByText(/No new transaction is broadcast from this browser/)).toBeTruthy();
-    expect(screen.queryByText(/Arc Mainnet verified/i)).toBeNull();
+    expect(screen.getByRole("heading", { name: /TWO SUCCESSFUL.*PAYMENTS.*ONE.*OBLIGATION/i })).toBeTruthy();
+    expect(screen.getByText(/separate from the interactive Testnet replay/i)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "MAINNET EVIDENCE ↘" })).toBeTruthy();
   });
 
   it("starts in configuration without exposing a verdict, proof, or qualification matrix", () => {
@@ -35,6 +37,15 @@ describe("Sazume evidence replay interface", () => {
     expect(screen.queryByText(/OBSERVED SETTLEMENTS/i)).toBeNull();
     expect(screen.queryByText(/OPEN VALIDATION RECORD/)).toBeTruthy();
     expect(screen.queryByText(/5c3a95adc37d/)).toBeNull();
+  });
+
+  it("links original Mainnet receipts and derives its result from accepted evidence", () => {
+    render(<App />);
+    const retry = screen.getByRole("link", { name: /TX 02 · SUCCESS/i });
+    expect(retry.getAttribute("href")).toBe("https://explorer.arc.io/tx/0x9c06cc30b06b42a7fa1833d60595e472f47ddbb2be2557f6b6cd67350d9b133c");
+    expect(screen.getAllByText("+0.020000 USDC").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("+0.010000 USDC").length).toBeGreaterThan(0);
+    expect(screen.getByText(/The reverted attempt consumed gas but moved no settlement principal/)).toBeTruthy();
   });
 
   it("keeps successful receipt status separate from an unsafe economic failure", async () => {

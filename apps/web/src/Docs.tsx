@@ -6,7 +6,7 @@ const pages = [
   { path: "/docs/concepts", group: "CONCEPTS", title: "Core model", description: "Intent, adapter, outcome, invariants, and deterministic scenarios." },
   { path: "/docs/cli", group: "CLI", title: "Command line", description: "Options, configuration, trace, JSON, and process status." },
   { path: "/docs/integration", group: "INTEGRATION", title: "Connect an application", description: "Implement the adapter boundary and use it in CI." },
-  { path: "/docs/arc", group: "ARC", title: "Arc qualification", description: "What was verified on Testnet and what remains unqualified." },
+  { path: "/docs/arc", group: "ARC", title: "Arc qualification", description: "Verified Testnet matrix and the Mainnet timeout-after-settlement experiment." },
   { path: "/docs/reference", group: "REFERENCE", title: "Fixtures & trust model", description: "Reference applications, evidence limits, and known constraints." },
 ];
 
@@ -34,7 +34,7 @@ function Introduction() {
     <h2>The experiment</h2>
     <Code>{`EconomicIntent → Scenario → ApplicationAdapter
       → EconomicOutcome → Invariants → PASS / FAIL`}</Code>
-    <p>The reference CLI and web replay use the same chain-independent core. The web experience replays accepted Arc Testnet records; it does not send transactions. Mainnet has not been deployed or qualified.</p>
+    <p>The reference CLI and web replay use the same chain-independent core. The web experiment replays accepted Arc Testnet records and sends no transactions. A separate Arc Mainnet qualification record documents the timeout-after-settlement hero experiment.</p>
     <p className="docs-next"><a href="/docs/getting-started">Install and run the first test →</a></p>
   </>;
 }
@@ -115,10 +115,12 @@ export default defineConfig({
 
 function Arc() {
   return <>
-    <p className="docs-lede">The Arc adapter was qualified against Arc Testnet. This is not a Mainnet deployment or guarantee.</p>
+    <p className="docs-lede">Sazume's four-scenario matrix was qualified on Arc Testnet. A separate, bounded timeout-after-settlement experiment was executed and independently verified on Arc Mainnet.</p>
     <h2>Verified Testnet evidence</h2><p>The accepted hero records corroborate successful transaction receipts, matching settlement events, and recipient ERC-20 balance deltas. Unsafe recorded two successful 0.010000 USDC settlements; the idempotent fixture recorded one successful settlement and a reverted duplicate. Original hashes and gas data are available in the homepage proof inspector and <code>evidence/testnet</code>.</p>
+    <h2>Verified Mainnet hero</h2><p>On chain ID 5042, the unsafe fixture at <code>0x8cd2da9e45d18c47a803f065a3625ae68bf37b17</code> settled the same intent twice. Two successful receipts, two <code>IntentSettled</code> events, two USDC transfers, and a 0.020000 USDC recipient balance increase agree. The idempotent fixture at <code>0x0908e0409d593409d251306302fdca0c45198b9c</code> settled once; its duplicate reverted without another transfer or balance change. The unsafe economic verdict was FAIL; the idempotent verdict was PASS.</p>
+    <p><a href="https://explorer.arc.io/tx/0x9c06cc30b06b42a7fa1833d60595e472f47ddbb2be2557f6b6cd67350d9b133c" target="_blank" rel="noreferrer">View original unsafe Mainnet retry ↗</a> · <a href="https://explorer.arc.io/tx/0x95bb4341272fbfb53170fe81191d4d15e86093fddcf1190297fcb74b5dd9ba7b" target="_blank" rel="noreferrer">View original idempotent duplicate revert ↗</a> · <a href="https://github.com/Webghost01-NG/sazume/tree/main/evidence/mainnet" target="_blank" rel="noreferrer">Inspect full Mainnet evidence ↗</a></p>
     <h2>USDC units</h2><p>Application settlement is measured through ERC-20 USDC with six decimals. Arc also exposes native USDC at 18 decimal precision for gas. Those are precision views of the same economic asset; balances must not be added. Gas keeps its native18 raw value and is converted to USDC6 by integer division by 10<sup>12</sup>, truncating sub-USDC6 remainder for display.</p>
-    <h2>Replay and network status</h2><p>The homepage action runs a verified evidence replay only. It does not create transactions from the browser. Explorer links identify original Testnet transactions. Arc Mainnet remains not deployed and not tested by Sazume.</p>
+    <h2>Scope and replay</h2><p>The homepage action replays historical Arc Testnet evidence only. It does not create transactions from the browser. The Mainnet record is a separately verified historical experiment, not a browser execution or a full Mainnet four-scenario qualification. The two Mainnet fixture contracts are testing instruments, not production payment infrastructure.</p>
   </>;
 }
 
@@ -128,7 +130,7 @@ function Reference() {
     <h2>Unsafe settlement</h2><p>The fixture accepts repeated settlement calls for an intent. On the offchain model, observed state naturally reaches two settlements after a lost acknowledgement and retry.</p>
     <h2>Idempotent settlement</h2><p>The fixture prevents a second economic transfer for an already settled intent. The Arc Solidity fixture reverts the duplicate call; reverted execution consumes gas onchain but is not counted as a settlement.</p>
     <h2>Trust model</h2><p>Sazume can only evaluate the state its adapter can observe. On Arc qualification, the observer corroborates receipt status, matching events, and recipient ERC-20 balance delta; disagreement is surfaced as an observer inconsistency.</p>
-    <h2>Known limitations</h2><p>The public npm packages are prerelease version <code>0.1.0-rc.1</code> and currently use the <code>next</code> tag. Adapter quality and completeness remain the integrator's responsibility. The current scenario set is deliberately small and deterministic. No Mainnet evidence exists.</p>
+    <h2>Known limitations</h2><p>The public npm packages are prerelease version <code>0.1.0-rc.1</code> and currently use the <code>next</code> tag. Adapter quality and completeness remain the integrator's responsibility. The current scenario set is deliberately small and deterministic. Mainnet qualification covers the timeout-after-settlement hero only; the full matrix remains a Testnet and local result.</p>
   </>;
 }
 
@@ -152,7 +154,7 @@ export default function Docs() {
       <nav className="docs-nav" aria-label="Documentation">
         <p>GUIDES & REFERENCE</p>
         {pages.map((page) => <a key={page.path} href={page.path} aria-current={current.path === page.path ? "page" : undefined}><span>{page.group}</span>{page.title}</a>)}
-        <p className="docs-status">ARC TESTNET<br />VERIFIED EVIDENCE<br /><br />MAINNET<br />NOT DEPLOYED</p>
+        <p className="docs-status">ARC TESTNET<br />FULL MATRIX VERIFIED<br /><br />ARC MAINNET<br />HERO VERIFIED</p>
       </nav>
       <article className="docs-article">
         <div className="docs-breadcrumb"><a href="/docs">DOCS</a><span>/</span>{current.group}</div>

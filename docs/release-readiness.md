@@ -1,6 +1,6 @@
 # Release and public-repository readiness
 
-Status checked 2026-10-08. Both public npm release candidates are published and independently exercised. No Mainnet transactions are authorized.
+Status updated 2026-10-14. Both public npm release candidates are published and independently exercised. A separately approved, bounded Arc Mainnet hero qualification has been executed and independently verified; no further Mainnet transactions are authorized by this document.
 
 ## npm release candidate
 
@@ -54,8 +54,8 @@ The commit email remains a privacy consideration; it was deliberately preserved 
 
 ## Arc Microgrants
 
-The official Arc Microgrants event page (checked 2026-10-08) requires a live, working Arc Mainnet deployment, a public repository, a short project/Arc-use description, and a public builder profile. It says submissions close 2026-10-14 at 23:59 ET and are reviewed on a rolling basis. Sazume has no Mainnet deployment or Mainnet transaction evidence, so it is not currently eligible. Do not present Testnet evidence as Mainnet evidence.
+The official Arc Microgrants event page (checked 2026-10-08) requires a live, working Arc Mainnet deployment, a public repository, a short project/Arc-use description, and a public builder profile. It says submissions close 2026-10-14 at 23:59 ET and are reviewed on a rolling basis. Sazume now has two deployed Mainnet test fixtures and independently verified timeout-after-settlement economic evidence in [`evidence/mainnet`](../evidence/mainnet). This establishes a Mainnet hero experiment, not a full four-scenario Mainnet matrix or production payment service. Retain the Testnet matrix under its own label.
 
-Before submission, verify the event page again; qualify the actual Mainnet integration; publish the source only after secret/privacy/license review; confirm the builder profile requirement; prepare a truthful demo walkthrough and independent evidence links. The project description should be written by the project team for the application, not copied from repository marketing text.
+Before submission, verify the event page and builder profile requirement again; confirm that the bounded fixture deployment satisfies the program's live deployment requirement; prepare a truthful demo walkthrough and independent evidence links. The project description should be written by the project team for the application, not copied from repository marketing text. No application has been submitted by this update.
 
 Source: <https://community.arc.io/public/events/arc-microgrants-f8tijfjhyq>

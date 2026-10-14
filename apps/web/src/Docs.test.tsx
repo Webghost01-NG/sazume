@@ -19,11 +19,12 @@ describe("first-party documentation surface", () => {
     expect(screen.getByRole("link", { name: "@sazume/cli on npm" })).toBeTruthy();
   });
 
-  it("truthfully describes verified Arc Testnet evidence and Mainnet status", () => {
+  it("distinguishes the full Testnet matrix from the Mainnet hero", () => {
     window.history.replaceState({}, "", "/docs/arc");
     render(<Docs />);
-    expect(screen.getByText(/Arc Testnet/)).toBeTruthy();
-    expect(screen.getByText(/Mainnet remains not deployed and not tested/)).toBeTruthy();
+    expect(screen.getAllByText(/Arc Testnet/).length).toBeGreaterThan(0);
+    expect(screen.getByText(/A separate, bounded timeout-after-settlement experiment/)).toBeTruthy();
+    expect(screen.getByText(/not a browser execution or a full Mainnet four-scenario qualification/)).toBeTruthy();
     expect(screen.getByText(/must not be added/)).toBeTruthy();
   });
 

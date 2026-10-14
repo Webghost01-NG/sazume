@@ -2,72 +2,58 @@
 
 ## The transaction succeeded. Did the money?
 
-[![core version](https://img.shields.io/npm/v/%40sazume%2Fcore/next?label=%40sazume%2Fcore%40next)](https://www.npmjs.com/package/@sazume/core)
-[![CLI version](https://img.shields.io/npm/v/%40sazume%2Fcli/next?label=%40sazume%2Fcli%40next)](https://www.npmjs.com/package/@sazume/cli)
+Sazume tests whether an app moves money as intended when requests time out, retries happen, or callbacks arrive twice. A transaction can succeed while the customer pays twice. Sazume checks the **economic outcome**, not just the receipt.
 
-Sazume tests whether programmable-money applications preserve one economic obligation under retries, timeouts, and duplicate execution. Two successful transactions can still mean one customer paid twice; Sazume evaluates the observed economic outcome, not receipt status alone.
+**[Try the verified replay](https://sazume.vercel.app)** · **[Read the docs](https://sazume.vercel.app/docs)** · **[Core on npm](https://www.npmjs.com/package/@sazume/core)** · **[CLI on npm](https://www.npmjs.com/package/@sazume/cli)**
 
-**Economic reliability testing for programmable money.** [Open the verified replay](https://sazume.vercel.app) · [Read the docs](https://sazume.vercel.app/docs)
+![Sazume's Arc Testnet evidence replay, showing the intent and fault controls](docs/images/sazume-testnet-replay.png)
 
-> The web experience replays previously verified Arc Testnet evidence. It does not broadcast transactions from the browser.
+The browser replays **earlier Arc Testnet transactions**. Clicking Run does not send a transaction.
 
-## What Sazume tests
+## Run your first test
 
-An `EconomicIntent` declares who should pay whom, how much, and which economic rules must hold. The same runner applies deterministic scenarios to an application’s `EconomicAdapter`, observes its state, then evaluates reusable invariants.
-
-The bundled scenarios are normal execution, timeout before settlement, timeout after settlement, and duplicate callback. The built-in invariants check settlement uniqueness, recipient amount, fulfillment uniqueness, and completion consistency.
-
-## Quickstart
-
-Install the public prerelease packages from the `next` dist-tag:
+Node.js 20.19+ is required. Install the public prerelease using the `next` tag:
 
 ```bash
 npm install @sazume/core@next
-npm install --save-dev @sazume/cli@next
+npm install -D @sazume/cli@next
 npx sazume test --adapter unsafe
-```
-
-The unsafe reference intentionally exits `1` when the economic invariants fail. Compare the idempotent implementation, which should exit `0`:
-
-```bash
 npx sazume test --adapter idempotent
 ```
 
-The same CLI can load a custom application adapter from `sazume.config.mjs`:
+The unsafe reference app fails two of four scenarios. The idempotent app passes all four:
+
+| Scenario | Unsafe | Idempotent |
+|---|---|---|
+| Normal | PASS | PASS |
+| Timeout before settlement | PASS | PASS |
+| Timeout after settlement | FAIL: paid twice | PASS |
+| Duplicate callback | FAIL: fulfilled twice | PASS |
+
+Exit `0` means every selected invariant passed. Exit `1` means an economic failure or execution error. Exit `2` means invalid CLI usage. Add `--trace` for deterministic steps or `--json` for CI. These local reference tests need no wallet or RPC.
+
+## Test your own app
+
+Define an `EconomicIntent`, implement the [`EconomicAdapter`](packages/core/src/adapter.ts) for your app, then point the CLI at a trusted config file:
 
 ```bash
 npx sazume test --config ./sazume.config.mjs
 npx sazume test --config ./sazume.config.mjs --json
 ```
 
-Exit `0` means all selected invariants pass; `1` means an invariant or execution failed; `2` means invalid CLI usage. `--trace` prints deterministic events. The bundled adapters use no RPC, wallet, private key, or Mainnet credentials.
+The adapter settles, fulfills, and **observes actual state**. Sazume's existing runner and four invariants decide PASS or FAIL. Amounts are integer USDC base units: `10_000n` means `0.010000 USDC`. Config files run as local code, so load only files you trust. Copy the working [paid-report example](examples/paid-report), or follow the [integration guide](https://sazume.vercel.app/docs/integration).
 
-Unsafe result:
+## Verified on Arc
 
-```text
-normal                       PASS
-timeout-before-settlement    PASS
-timeout-after-settlement     FAIL  (2 settlements for 1 intent)
-duplicate-callback           FAIL  (2 fulfillments for 1 intent)
-```
+The full four-scenario matrix passed on Arc Testnet: Unsafe 2/4, Idempotent 4/4. [Testnet records](evidence/testnet) include receipts, settlement events, and recipient USDC balance changes.
 
-## Connect an application
+The **Arc Mainnet timeout-after-settlement hero** was also executed on chain 5042. For one intent, the [unsafe contract](https://explorer.arc.io/address/0x8cd2da9e45d18c47a803f065a3625ae68bf37b17) paid the recipient **0.020000 USDC** across [two successful settlements](https://explorer.arc.io/tx/0x9c06cc30b06b42a7fa1833d60595e472f47ddbb2be2557f6b6cd67350d9b133c), so the economic result failed. The [idempotent contract](https://explorer.arc.io/address/0x0908e0409d593409d251306302fdca0c45198b9c) paid **0.010000 USDC** once and [reverted the duplicate](https://explorer.arc.io/tx/0x95bb4341272fbfb53170fe81191d4d15e86093fddcf1190297fcb74b5dd9ba7b), so the intent passed.
 
-Implement the chain-independent [`EconomicAdapter`](packages/core/src/adapter.ts), create an intent with `defineIntent`, and export `{ intent, adapter, scenarios }` from a trusted JavaScript config. See the runnable [paid-report example](examples/paid-report) and [integration guide](https://sazume.vercel.app/docs/integration). Config files execute as local code; only load files you trust.
+![Verified Arc Mainnet comparison: unsafe duplicate payment versus idempotent settlement](docs/images/sazume-mainnet-proof.png)
 
-The CLI calls the existing core runner and invariant engine. An adapter reports application behavior and observed economic state; it does not choose the verdict. The external-consumer check packs the packages and validates them in a separate temporary project:
+[Mainnet evidence](evidence/mainnet) records all eight authorized attempts, receipt statuses, events, transfers, gas, and recipient balance deltas. The run moved **0.030000 USDC** in principal and spent **0.027922680 USDC** on gas. This proves the **hero scenario**, not a full Mainnet matrix or a production payment service. The browser's interactive experiment still replays **Testnet** evidence.
 
-```bash
-npm run test:external-consumer
-```
-
-## Arc qualification
-
-The Solidity fixtures were tested locally and on Arc Testnet. Accepted Testnet runs corroborate receipts, `IntentSettled` events, and recipient ERC-20 USDC6 balance deltas. The 0.010000 USDC qualification amount is separate from the CLI’s conceptual 1 USDC example. Evidence is in [`evidence/testnet`](evidence/testnet); network and unit details are in [Arc assumptions](docs/arc-assumptions.md).
-
-**Arc Mainnet has not been deployed or qualified.** No Mainnet transaction has been sent and no Mainnet USDC has been spent. The Arc fixture adapter rejects Mainnet execution. Mainnet remains a separately approved phase.
-
-## Development
+## Work on Sazume
 
 ```bash
 npm ci
@@ -77,10 +63,7 @@ npm run build
 npm run demo
 npm run test:contracts
 npm run demo:arc-local
+npm run test:external-consumer
 ```
 
-`@sazume/core@0.1.0-rc.1` and `@sazume/cli@0.1.0-rc.1` are published under the `next` dist-tag with the MIT license. Install with the explicit `@next` tag during this prerelease; the npm `latest` tag remains the temporary `0.0.0-stage` placeholder. The core and CLI READMEs document the public APIs, adapter contract, scenarios, JSON output, and CI exit codes.
-
-## Docs
-
-The [documentation site](https://sazume.vercel.app/docs) covers the core model, CLI, adapters, Arc Testnet evidence, fixtures, and current limitations. The product is a testing framework—not a payment contract or production settlement service.
+The public packages are `@sazume/core@0.1.0-rc.1` and `@sazume/cli@0.1.0-rc.1` under `next`. The npm `latest` tag still points to a temporary holding version; use `@next`. Sazume is MIT licensed. See the [docs](https://sazume.vercel.app/docs) for the core model, CLI, Arc units, evidence, and limits.

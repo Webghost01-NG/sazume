@@ -10,6 +10,7 @@ import { buildRunPresentation, formatReplayClock, type TraceStep } from "./lib/p
 import { initialRunState, runMachineReducer } from "./lib/runMachine.js";
 import { EconomicVerdict } from "./components/EconomicVerdict.js";
 import { ProofInspector } from "./components/ProofInspector.js";
+import { MainnetQualification } from "./components/MainnetQualification.js";
 
 const scenarios: Array<{ id: ScenarioKey; title: string; description: string }> = [
   { id: "normal", title: "NORMAL", description: "Settle once, then fulfill." },
@@ -192,6 +193,7 @@ export default function App() {
         <a className="brand" href="#top" aria-label="Sazume home"><BrandMark /><span>SAZUME</span></a>
         <span className="brand-purpose">ECONOMIC RELIABILITY TESTING</span>
         <a className="docs-link" href="/docs">DOCUMENTATION ↗</a>
+        <a className="mainnet-nav-link" href="#mainnet-record">MAINNET EVIDENCE ↘</a>
         <div className="network-proof"><span>{evidence.network.toUpperCase()}</span><i aria-hidden="true">/</i><span>VERIFIED EVIDENCE</span></div>
       </header>
 
@@ -317,12 +319,13 @@ export default function App() {
       </section>
 
       <QualificationSection scenario={scenario} />
+      <MainnetQualification />
 
       <footer className="site-footer">
         <a className="footer-brand" href="#top"><BrandMark /><span>SAZUME</span></a>
         <p>Economic reliability testing for programmable money.</p>
-        <div><span>MAINNET</span><strong>NOT DEPLOYED</strong></div>
-        <span className="footer-evidence">VERIFIED EVIDENCE · ARC TESTNET</span>
+        <div><span>MAINNET</span><strong>HERO QUALIFIED</strong></div>
+        <span className="footer-evidence">INTERACTIVE REPLAY · ARC TESTNET</span>
       </footer>
       <div className="sr-only" aria-live="polite">{isComplete ? `Replay complete. Economic intent ${evidence.verdict === "PASS" ? "preserved" : "not preserved"}.` : ""}</div>
     </main>

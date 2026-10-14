@@ -1,0 +1,131 @@
+{
+  "network": "arc-mainnet",
+  "chainId": 5042,
+  "status": "observed",
+  "manifestDigest": "0x94a0d44233095754e70dab9304ff59232892dc66a8837710df3a436e6b77943b",
+  "rpcUrl": "https://rpc.mainnet.arc.io",
+  "payerAddress": "0x6CeD8D6Bad8Dfd2e60BCEA116fE74548f959f1F2",
+  "recipientAddress": "0xD1819994E1DB34Cd2BA460607E248B4c6d3925c7",
+  "usdcAddress": "0x3600000000000000000000000000000000000000",
+  "contractAddress": "0x0908e0409d593409d251306302fdca0c45198b9c",
+  "scenario": "timeout-after-settlement",
+  "intentId": "4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0",
+  "humanId": "SAZUME-MAINNET-FIXED-a975a8d33e4ba4c1f02cfde00ab4e58b",
+  "amountUsdc6": "10000",
+  "transactions": [
+    {
+      "id": "idempotentSettlementFirst",
+      "hash": "0xc98f318e595ae79054ac7ea90b639686fb899f792eb9547c709655d42689c785",
+      "nonce": 6,
+      "recipientBeforeUsdc6": "20000",
+      "status": "success",
+      "blockNumber": "25974266",
+      "blockHash": "0x5c62cbea1cf04c5e26ae92d9cd72efb54f23fa65d834d7567498f5d6229f340c",
+      "gasUsed": "82720",
+      "effectiveGasPrice": "20000000000",
+      "gasCostNative18": "1654400000000000",
+      "settlementEventCount": 1,
+      "settlementAmountUsdc6": "10000",
+      "usdcTransferCount": 1,
+      "recipientAfterUsdc6": "30000",
+      "explorer": "https://explorer.arc.io/tx/0xc98f318e595ae79054ac7ea90b639686fb899f792eb9547c709655d42689c785"
+    },
+    {
+      "id": "idempotentDuplicateRevert",
+      "hash": "0x95bb4341272fbfb53170fe81191d4d15e86093fddcf1190297fcb74b5dd9ba7b",
+      "nonce": 7,
+      "recipientBeforeUsdc6": "30000",
+      "status": "reverted",
+      "blockNumber": "25974272",
+      "blockHash": "0x162fdaa428e824e644d701a31cb8f17d6cd37e0ad15d646013450a81ced00d82",
+      "gasUsed": "25281",
+      "effectiveGasPrice": "20000000000",
+      "gasCostNative18": "505620000000000",
+      "settlementEventCount": 0,
+      "settlementAmountUsdc6": "0",
+      "usdcTransferCount": 0,
+      "recipientAfterUsdc6": "30000",
+      "explorer": "https://explorer.arc.io/tx/0x95bb4341272fbfb53170fe81191d4d15e86093fddcf1190297fcb74b5dd9ba7b"
+    }
+  ],
+  "settlement": {
+    "count": 1,
+    "totalAmountUsdc6": "10000"
+  },
+  "recipientDeltaUsdc6": "10000",
+  "fulfillmentCount": 1,
+  "completed": true,
+  "invariants": [
+    {
+      "name": "Settlement uniqueness",
+      "passed": true,
+      "expected": "<= 1",
+      "observed": "1"
+    },
+    {
+      "name": "Recipient amount",
+      "passed": true,
+      "expected": "0.010000 USDC",
+      "observed": "10000 base units"
+    },
+    {
+      "name": "Fulfillment uniqueness",
+      "passed": true,
+      "expected": "<= 1",
+      "observed": "1"
+    },
+    {
+      "name": "Completion consistency",
+      "passed": true,
+      "expected": "completed implies settlement and fulfillment",
+      "observed": "completed=true, settlements=1, fulfillments=1"
+    }
+  ],
+  "passed": true,
+  "trace": [
+    {
+      "sequence": 1,
+      "type": "settlement-attempt",
+      "intentId": "4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0"
+    },
+    {
+      "sequence": 2,
+      "type": "settlement-observed",
+      "intentId": "4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0"
+    },
+    {
+      "sequence": 3,
+      "type": "timeout",
+      "intentId": "4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0",
+      "metadata": {
+        "phase": "response-lost-after-settlement"
+      }
+    },
+    {
+      "sequence": 4,
+      "type": "retry",
+      "intentId": "4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0"
+    },
+    {
+      "sequence": 5,
+      "type": "settlement-attempt",
+      "intentId": "4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0"
+    },
+    {
+      "sequence": 6,
+      "type": "settlement-observed",
+      "intentId": "4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0"
+    },
+    {
+      "sequence": 7,
+      "type": "fulfillment-attempt",
+      "intentId": "4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0"
+    },
+    {
+      "sequence": 8,
+      "type": "fulfillment-observed",
+      "intentId": "4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0"
+    }
+  ],
+  "corroboration": "receipt + fixture event + ERC-20 USDC6 transfer + native18 mirror + recipient balance delta"
+}
