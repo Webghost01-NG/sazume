@@ -4,6 +4,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { keccak256, toHex } from "viem";
+import { defineIntent } from "../packages/core/src/intent.js";
 import {
   MAINNET_STEPS, assertFeeQuote, assertFunding, assertJournalManifest,
   assertRoles, assertSettlementEvidence, assertStepBudget,
@@ -68,7 +69,12 @@ describe("Arc Mainnet qualification stop gates", () => {
   it("refuses execution before any RPC or signing when exact manifest approval is absent", () => {
     const directory = mkdtempSync(join(tmpdir(), "sazume-mainnet-gate-"));
     try {
-      const manifest = { network: "arc-mainnet", chainId: 5042, usdcAddress: "0x3600000000000000000000000000000000000000" };
+      const intentId = (id: string) => `0x${defineIntent({ id, payment: {
+        payer: signer, recipient, asset: { symbol: "USDC", decimals: 6 }, amount: 10_000n,
+      }, invariants: [] }).intentId}`;
+      const manifest = { network: "arc-mainnet", chainId: 5042, usdcAddress: "0x3600000000000000000000000000000000000000",
+        signerAddress: signer, recipientAddress: recipient, unsafeHumanId: "TEST-UNSAFE", fixedHumanId: "TEST-FIXED",
+        unsafeIntentId: intentId("TEST-UNSAFE"), fixedIntentId: intentId("TEST-FIXED") };
       const path = join(directory, "plan.json");
       writeFileSync(path, JSON.stringify({ manifest, digest: keccak256(toHex(JSON.stringify(manifest))) }));
       const result = spawnSync(process.execPath, ["--import", "tsx", "packages/arc/src/mainnet-qualification.ts", "--execute", "--manifest", path], {
