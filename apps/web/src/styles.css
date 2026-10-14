@@ -311,6 +311,8 @@ button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px soli
 .docs-article > p, .docs-article > h2 { max-width: 70ch; }
 .docs-article > p { margin: 0 0 18px; color: var(--gray-1); font-size: 15px; line-height: 1.8; }
 .docs-article .docs-lede { margin-bottom: 25px; color: var(--white); font-size: 20px; line-height: 1.55; }
+.docs-article p a { color: var(--white); text-decoration-color: var(--gray-3); text-underline-offset: 4px; }
+.docs-article p a:hover { text-decoration-color: var(--white); }
 .docs-article h2 { margin: 37px 0 11px; padding-top: 17px; border-top: 1px solid var(--rule); color: var(--white); font: 600 25px/1.15 var(--display); }
 .docs-article code { color: var(--white); font: .92em var(--mono); overflow-wrap: anywhere; }
 .docs-code { position: relative; overflow: auto; margin: 18px 0 25px; padding: 19px 84px 19px 18px; border-block: 1px solid var(--gray-4); color: var(--gray-1); background: #0d0d0d; font: 12px/1.8 var(--mono); tab-size: 2; }
