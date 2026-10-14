@@ -7,6 +7,7 @@ interface IERC20 {
 
 library SafeTransferFrom {
     function safeTransferFrom(IERC20 token, address from, address to, uint256 amount) internal {
+        require(address(token).code.length != 0, "TOKEN_HAS_NO_CODE");
         (bool ok, bytes memory result) = address(token).call(
             abi.encodeCall(IERC20.transferFrom, (from, to, amount))
         );

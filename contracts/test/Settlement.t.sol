@@ -74,6 +74,20 @@ contract SettlementTest {
         require(found, "MISSING_EVENT");
     }
 
+    function testNoCodeTokenCannotCreateFalseSettlementEvidence() public {
+        address tokenWithoutCode = address(0xBEEF);
+        UnsafeSettlement unsafeApp = new UnsafeSettlement(tokenWithoutCode);
+        IdempotentSettlement fixedApp = new IdempotentSettlement(tokenWithoutCode);
+        vm.recordLogs();
+        (bool unsafeOk,) = address(unsafeApp).call(abi.encodeCall(unsafeApp.settle, (INTENT, RECIPIENT, AMOUNT_USDC6)));
+        (bool fixedOk,) = address(fixedApp).call(abi.encodeCall(fixedApp.settle, (INTENT, RECIPIENT, AMOUNT_USDC6)));
+        Log[] memory logs = vm.getRecordedLogs();
+        require(!unsafeOk && !fixedOk, "NO_CODE_TOKEN_ACCEPTED");
+        require(!fixedApp.settled(INTENT), "FAILED_FIXED_SETTLEMENT_PERSISTED");
+        require(_settlementEvents(logs, address(unsafeApp), INTENT) == 0, "FALSE_UNSAFE_EVENT");
+        require(_settlementEvents(logs, address(fixedApp), INTENT) == 0, "FALSE_FIXED_EVENT");
+    }
+
     function _settlementEvents(Log[] memory logs, address emitter, bytes32 intent) private pure returns (uint256 count) {
         for (uint256 i; i < logs.length; ++i) if (logs[i].emitter == emitter && logs[i].topics.length == 4 && logs[i].topics[1] == intent) count++;
     }
