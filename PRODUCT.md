@@ -27,7 +27,7 @@ The current browser experience replays previously accepted Arc Testnet evidence.
 - The validated scenarios are normal, timeout before settlement, timeout after settlement, and duplicate callback.
 - The economic invariants cover settlement uniqueness, recipient amount, fulfillment uniqueness, and completion consistency.
 - The current interface uses evidence from `evidence/testnet/`; the qualification amount is 0.01 USDC (10,000 USDC6).
-- Mainnet deployment and testing have not occurred. Do not imply otherwise.
+- The Mainnet timeout-after-settlement hero was verified separately. The four-scenario Mainnet matrix was not run; do not imply otherwise.
 - Do not change `packages/core` semantics as a frontend design convenience.
 
 ## Brand Commitments
@@ -39,7 +39,7 @@ The current browser experience replays previously accepted Arc Testnet evidence.
 
 ## Evidence on Hand
 
-Accepted Arc Testnet qualification records, transaction receipts, settlement events, recipient balance deltas, and the four-scenario matrix are in `evidence/testnet/`. Do not invent hashes, blocks, gas, contracts, balances, or live execution.
+Accepted Arc Testnet qualification records and the four-scenario matrix are in `evidence/testnet/`. A separate Mainnet hero and independent receipt/event/transfer/balance verification are in `evidence/mainnet/`. Do not invent hashes, blocks, gas, contracts, balances, or live execution.
 
 ## Product Principles
 

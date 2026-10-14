@@ -66,7 +66,7 @@ Motion is limited to trace-row arrival, active replay indication, verdict reveal
 
 `testnetEvidenceProvider` loads the accepted `evidence/testnet/` records and qualification matrix. `buildRunPresentation` derives the displayed trace and invariant presentation from that evidence. React components format and reveal those values; they do not independently assign economic outcomes.
 
-The browser is a **verified Arc Testnet evidence replay**. No browser RPC request or transaction broadcast occurs. The network is labeled Arc Testnet, evidence references the accepted run record and chain ID, transaction links use the Arc Testnet explorer, and the footer states that Mainnet is not deployed. The qualification amount is read from evidence (`USDC6`) and formatted without floating-point arithmetic.
+The interactive browser experiment is a **verified Arc Testnet evidence replay**. No browser RPC request or transaction broadcast occurs. It remains labeled Arc Testnet and links to original Testnet transactions. A separate historical Mainnet hero record loads accepted data from `evidence/mainnet/` and is labeled accordingly. The footer distinguishes the Testnet replay from Mainnet hero qualification. The qualification amount is read from evidence (`USDC6`) and formatted without floating-point arithmetic.
 
 The proof inspector distinguishes successful receipts, matching intent settlement events, and recipient USDC6 balance movement. It exposes transaction hashes, block numbers, gas, gas cost units, the intent ID, contract, and recipient evidence, with copy controls and explorer links.
 
@@ -99,6 +99,6 @@ The docs inherit the global focus outline, neutral palette, and system-safe typo
 
 - Do not add chromatic status colors, gradients, glass surfaces, decorative dashboard tiles, or repeated rounded cards.
 - Do not label evidence replay as live execution.
-- Do not display Mainnet verification or imply a browser-signed transaction.
+- Mainnet verification must refer only to the independently checked timeout-after-settlement hero, never the full four-scenario matrix or a browser-signed transaction.
 - Do not move economic semantics into the UI or change `packages/core` for presentation convenience.
 - Keep monetary values as integer USDC6 strings/bigints at the evidence boundary; do not introduce floating-point accounting.

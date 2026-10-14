@@ -63,9 +63,9 @@ npm run test:external-consumer
 
 ## Arc qualification
 
-The Solidity fixtures were tested locally and on Arc Testnet. Accepted Testnet runs corroborate receipts, `IntentSettled` events, and recipient ERC-20 USDC6 balance deltas. The 0.010000 USDC qualification amount is separate from the CLI’s conceptual 1 USDC example. Evidence is in [`evidence/testnet`](evidence/testnet); network and unit details are in [Arc assumptions](docs/arc-assumptions.md).
+The Solidity fixtures were tested locally and across the full four-scenario matrix on Arc Testnet. Accepted Testnet runs corroborate receipts, `IntentSettled` events, and recipient ERC-20 USDC6 balance deltas. The 0.010000 USDC qualification amount is separate from the CLI’s conceptual 1 USDC example. Evidence is in [`evidence/testnet`](evidence/testnet); network and unit details are in [Arc assumptions](docs/arc-assumptions.md).
 
-**Arc Mainnet has not been deployed or qualified.** No Mainnet transaction has been sent and no Mainnet USDC has been spent. The Arc fixture adapter rejects Mainnet execution. Mainnet remains a separately approved phase.
+**Arc Mainnet hero qualified.** On chain 5042, the [unsafe fixture](https://explorer.arc.io/address/0x8cd2da9e45d18c47a803f065a3625ae68bf37b17) made two successful 0.010000 USDC settlements for one intent and failed the economic invariants. The [idempotent fixture](https://explorer.arc.io/address/0x0908e0409d593409d251306302fdca0c45198b9c) made one settlement and reverted the duplicate, preserving the intent. Mainnet receipts, settlement events, USDC transfers, and recipient balance deltas agree; inspect the [complete Mainnet evidence](evidence/mainnet) and the [original unsafe retry](https://explorer.arc.io/tx/0x9c06cc30b06b42a7fa1833d60595e472f47ddbb2be2557f6b6cd67350d9b133c). Principal transferred was 0.030000 USDC and gas cost was 0.027922680 USDC. This was a bounded **timeout-after-settlement** experiment, not a full Mainnet scenario matrix or production payment deployment. The browser still replays historical **Testnet** evidence and broadcasts no transaction.
 
 ## Development
 
