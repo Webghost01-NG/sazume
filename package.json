@@ -32,7 +32,8 @@
     "demo:arc-foundry-local": "SAZUME_ARC_FOUNDRY_LOCAL=1 tsx packages/arc/src/demo-local.ts",
     "qualify:arc-testnet:hero": "tsx packages/arc/src/qualify-testnet.ts hero",
     "qualify:arc-testnet:full": "tsx packages/arc/src/qualify-testnet.ts full",
-    "preflight:arc-mainnet": "forge build --root contracts && tsx packages/arc/src/mainnet-readonly-preflight.ts"
+    "preflight:arc-mainnet": "forge build --root contracts && tsx packages/arc/src/mainnet-readonly-preflight.ts",
+    "qualify:arc-mainnet": "tsx packages/arc/src/mainnet-qualification.ts"
   },
   "dependencies": {
     "react": "^19.3.0",
