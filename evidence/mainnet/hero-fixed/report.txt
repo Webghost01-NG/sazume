@@ -1,0 +1,10 @@
+SAZUME ARC MAINNET — FIXED TIMEOUT AFTER SETTLEMENT
+Intent: SAZUME-MAINNET-FIXED-a975a8d33e4ba4c1f02cfde00ab4e58b / 4d08f355310b9231007f3950c151a8fd8e9bd3696e271f5c6db3b36d4447dfe0
+Payer: 0x6CeD8D6Bad8Dfd2e60BCEA116fE74548f959f1F2 Recipient: 0xD1819994E1DB34Cd2BA460607E248B4c6d3925c7
+Settlement attempts: 2
+Observed settlements: 1
+Recipient amount: 0.010000 USDC
+Fulfillments: 1
+Economic verdict: PASS
+idempotentSettlementFirst 0xc98f318e595ae79054ac7ea90b639686fb899f792eb9547c709655d42689c785 success block=25974266 gasUsed=82720 effectiveGasPrice=20000000000
+idempotentDuplicateRevert 0x95bb4341272fbfb53170fe81191d4d15e86093fddcf1190297fcb74b5dd9ba7b reverted block=25974272 gasUsed=25281 effectiveGasPrice=20000000000
