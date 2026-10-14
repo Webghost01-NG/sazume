@@ -1,5 +1,7 @@
 # Proposed Arc Mainnet qualification manifest
 
+> Historical audit snapshot. A bounded runner now exists; see [qualification-runner.md](qualification-runner.md). The generated digest-bearing manifest and separate owner approval govern any future execution. This document alone never authorizes a broadcast.
+
 **Status: DRAFT / NO-GO / NO BROADCAST AUTHORIZED.** Prepared 2026-10-14 from the audited fixture source. This is a transaction plan, not transaction evidence. No deployment address, transaction hash, block, signer, recipient or wallet balance has been invented. The current repository has **no Mainnet write command**; `packages/arc` rejects chain ID 5042 for execution.
 
 ## Preconditions requiring a separately reviewed executor
